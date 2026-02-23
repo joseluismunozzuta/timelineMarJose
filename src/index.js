@@ -14,7 +14,7 @@ const data = [
     { id: 1, slides: [{ index: 1 }, { index: 2 }, { index: 3 }, { index: 4 }, { index: 5 }] },
     { id: 2, slides: [{ index: 6 }, { index: 7 }, { index: 8 }, { index: 9 }, { index: 10 }] },
     { id: 3, slides: [{ index: 11 }, { index: 12 }, { index: 13 }, { index: 14 }, { index: 15 }] },
-    { id: 4, slides: [{ index: 16 }, { index: 17 }, { index: 18 }, { index: 19 }, { index: 20 }] }
+    { id: 4, slides: [{ index: 16 }] }
 ];
 
 const dbData = [];
@@ -24,13 +24,13 @@ let elements = [];
 function setBackgroundInitial() {
     let backgroundinitial = document.getElementById("container0");
     const min = 1;
-    const max = 8;
+    const max = 6;
     const random_number = Math.floor(Math.random() * (max - min + 1)) + min;
     backgroundinitial.style.backgroundImage = `url(assets/img/hero${random_number}.jpg)`;
     backgroundinitial.style.backgroundPosition = "center";
 
 
-    for (var g = 1; g <= 20; g++) {
+    for (var g = 1; g <= 16; g++) {
         let swiper = document.getElementById(`swiper-slide${g}`);
         const min = 1;
         const max = 5;
@@ -44,19 +44,24 @@ function setBackgroundInitial() {
 function buildFirstPagination() {
     data.forEach(containerData => {
         const containerId = `container${containerData.id}`;
-        const swiperSelector = `#${containerId} .swiper-container`;
+        const swiperSelector = `#${containerId} .swiper`;
 
         // Initialize a new Swiper instance for each container
         const timelineSwiper = new Swiper(swiperSelector, {
             direction: 'vertical',
             loop: false,
             speed: 1600,
-            pagination: '.swiper-pagination',
-            paginationBulletRender: function (swiper, index, className) {
-                const number = containerData.slides[index].index;
-                return `<span class="${className}">${number}</span>`;
+            pagination: {
+                el: '.swiper-pagination',
+                type: 'bullets',
+                renderBullet: function (index, className) {
+                    console.log("Rendering index: ", index);
+                    console.log(containerData.slides[index]);
+                    const number = containerData.slides[index].index;
+                    return `<span class="${className}">${number}</span>`;
+                },
+                clickable: true
             },
-            paginationClickable: true,
             nextButton: '.swiper-button-next',
             prevButton: '.swiper-button-prev',
             initialSlide: 5,
@@ -80,7 +85,7 @@ function setAllCarouselItems() {
 
     const finalArray = [];
 
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 16; i++) {
         let carousel = document.getElementById("carousel" + i);
         const subArray = imagesUrls.filter(url => url.includes(`/img/${i}/`));
         finalArray.push(subArray);
@@ -144,7 +149,7 @@ function addContainersAndSlides(dbDocs) {
                                         d="M214.6 41.4c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 141.2V448c0 17.7 14.3 32 32 32s32-14.3 32-32V141.2L329.4 246.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-160-160z" /></svg></span>
                         </button>
                     </a>
-                    <div class="swiper-container">
+                    <div class="swiper">
                         <div class="swiper-wrapper" id="swiper_container${initial_containerid}">
                         </div>
                         <div class="swiper-button-prev"></div>
@@ -257,18 +262,23 @@ function addContainersAndSlides(dbDocs) {
 function buildSecondPagination() {
     dbData.forEach(containerData => {
         const containerId = `container${containerData.id}`;
-        const swiperSelector = `#${containerId} .swiper-container`;
+        const swiperSelector = `#${containerId} .swiper`;
 
         const timelineSwiper = new Swiper(swiperSelector, {
             direction: 'vertical',
             loop: false,
             speed: 1600,
-            pagination: '.swiper-pagination',
-            paginationBulletRender: function (swiper, index, className) {
-                const number = containerData.slides[index].index;
-                return `<span class="${className}">${number}</span>`;
+            pagination: {
+                el: '.swiper-pagination',
+                type: 'bullets',
+                renderBullet: function (index, className) {
+                    console.log("Rendering index: ", index);
+                    console.log(containerData.slides[index]);
+                    const number = containerData.slides[index].index;
+                    return `<span class="${className}">${number}</span>`;
+                },
+                clickable: true
             },
-            paginationClickable: true,
             nextButton: '.swiper-button-next',
             prevButton: '.swiper-button-prev',
             initialSlide: 5,
@@ -351,103 +361,35 @@ document.addEventListener("DOMContentLoaded", async function () {
 });
 
 const imagesUrls = [
-    "assets/img/0/20230810_203145.jpg",
-"assets/img/0/20230810_203213.jpg",
-"assets/img/0/20230810_203231.jpg",
-"assets/img/0/20230810_203312.jpg",
-"assets/img/1/0897edc1.jpg",
-"assets/img/1/1874478ce.jpg",
-"assets/img/1/27ac2c7e.jpg",
-"assets/img/1/3d8f417e.jpg",
-"assets/img/1/4251136.jpg",
-"assets/img/1/43fa384.jpg",
-"assets/img/1/4e06a9fc.jpg",
-"assets/img/1/5615fb48.jpg",
-"assets/img/1/5e6f5ad6.jpg",
-"assets/img/1/66fda627.jpg",
-"assets/img/1/9bc86855.jpg",
-"assets/img/1/ba414df9.jpg",
-"assets/img/1/bf377142.jpg",
-"assets/img/1/d1e71e.jpg",
-"assets/img/1/d4f83e5.jpg",
-"assets/img/1/f280fda4.jpg",
-"assets/img/1/_b1fa566b.jpg",
-"assets/img/10/020231006_174828.jpg",
-"assets/img/10/20231006_174843.jpg",
-"assets/img/10/920231006_174826.jpg",
-"assets/img/11/0120231006_192449.jpg",
-"assets/img/11/20231006_191242.jpg",
-"assets/img/11/20231006_192620.jpg",
-"assets/img/12/020231023_200517.jpg",
-"assets/img/12/20231023_200242.jpg",
-"assets/img/12/20231023_224406.jpg",
-"assets/img/12/20231023_224835.jpg",
-"assets/img/12/20231023_224934.jpg",
-"assets/img/13/20231026_190343.jpg",
-"assets/img/13/20231026_193112.jpg",
-"assets/img/13/20231026_193142.jpg",
-"assets/img/13/20231026_193157.jpg",
-"assets/img/14/020231029_180044.jpg",
-"assets/img/14/20231029_175912.jpg",
-"assets/img/14/20231029_175959.jpg",
-"assets/img/14/7130440.jpg",
-"assets/img/15/20231029_193442.jpg",
-"assets/img/15/20231029_201412.jpg",
-"assets/img/15/20231029_202213.jpg",
-"assets/img/15/20231029_204513.jpg",
-"assets/img/15/20231029_204800.jpg",
-"assets/img/15/20231029_205413.jpg",
-"assets/img/16/20231029_212022.jpg",
-"assets/img/16/20231029_212026.jpg",
-"assets/img/17/020231101_004332.jpg",
-"assets/img/17/20231101_003942.jpg",
-"assets/img/17/20231101_004312.jpg",
-"assets/img/17/20231101_004406.jpg",
-"assets/img/17/20231101_040430.jpg",
-"assets/img/17/20231101_041603.jpg",
-"assets/img/17/20231101_041616.jpg",
-"assets/img/17/20231101_041639.jpg",
-"assets/img/17/20231101_041717.jpg",
-"assets/img/18/020231101_004201.jpg",
-"assets/img/18/20231101_004023.jpg",
-"assets/img/18/20231101_004052.jpg",
-"assets/img/18/20231101_004057.jpg",
-"assets/img/18/20231101_004233.jpg",
-"assets/img/18/20231101_004439.jpg",
-"assets/img/18/20231101_004506.jpg",
-"assets/img/18/20231101_004536.jpg",
-"assets/img/19/20231109_193226.jpg",
-"assets/img/19/20231109_193349.jpg",
-"assets/img/19/20231109_202608.jpg",
-"assets/img/19/20231109_213648.jpg",
-"assets/img/19/20231109_213825.jpg",
-"assets/img/19/20231109_214429.jpg",
-"assets/img/2/20230820_180520.jpg",
-"assets/img/2/20230820_180559.jpg",
-"assets/img/2/20230820_180602.jpg",
-"assets/img/2/20230820_180629.jpg",
-"assets/img/2/20230820_180634.jpg",
-"assets/img/2/20230820_180933_05.jpg",
-"assets/img/3/20230825_231746.jpg",
-"assets/img/3/20230825_231801.jpg",
-"assets/img/3/20230825_231807.jpg",
-"assets/img/4/20230912_000401.jpg",
-"assets/img/4/20230912_000432.jpg",
-"assets/img/4/20230912_000549.jpg",
-"assets/img/4/20230912_000556.jpg",
-"assets/img/5/20230915_223022.jpg",
-"assets/img/5/20230919_224657.jpg",
-"assets/img/6/20230916_235526.jpg",
-"assets/img/7/20230921_202206.jpg",
-"assets/img/7/20230921_202355.jpg",
-"assets/img/8/00_20230923_214057.jpg",
-"assets/img/8/20230923_213444.jpg",
-"assets/img/8/20230923_213458.jpg",
-"assets/img/8/20230923_214450.jpg",
-"assets/img/8/20230923_230202.jpg",
-"assets/img/8/90230923_212250.jpg",
-"assets/img/9/20230929_223923.jpg",
-"assets/img/9/20230929_223944.jpg",
-"assets/img/9/20230929_224117.jpg",
-"assets/img/9/7c45.jpg"
+    "assets/img/0/IMG-20260115-WA0177.jpg",
+    "assets/img/1/IMG-20260118-WA0024.jpg",
+    "assets/img/1/IMG-20260118-WA0106.jpg",
+    "assets/img/1/IMG-20260118-WA0108.jpg",
+    "assets/img/10/IMG_9024.gif",
+    "assets/img/11/20260211_211913.jpg",
+    "assets/img/11/9fed7cd7-a7c1-4938-b3b2-0c54d1becfaa-copied-media~2.jpg",
+    "assets/img/11/IMG_9087.jpg",
+    "assets/img/11/IMG_9091.jpg",
+    "assets/img/11/IMG_9094.jpg",
+    "assets/img/11/IMG_9099.jpg",
+    "assets/img/12/20260214_230711.jpg",
+    "assets/img/12/IMG_9246.jpg",
+    "assets/img/12/IMG_9265.jpg",
+    "assets/img/13/IMG_9355.jpg",
+    "assets/img/14/20260221_031519.jpg",
+    "assets/img/15/20260222_171437.jpg",
+    "assets/img/2/20260122_224946.jpg",
+    "assets/img/2/IMG_8480.jpg",
+    "assets/img/2/IMG_8480.jpg",
+    "assets/img/3/20260124_183549.jpg",
+    "assets/img/3/20260125_002820.jpg",
+    "assets/img/3/20260125_110053.jpg",
+    "assets/img/4/IMG_8573.jpg",
+    "assets/img/4/IMG_85822.gif",
+    "assets/img/5/IMG-20260129-WA0022.jpg",
+    "assets/img/5/IMG_8639.jpg",
+    "assets/img/6/20260130_194929.jpg",
+    "assets/img/7/IMG_8882.gif",
+    "assets/img/8/IMG_8961.jpg",
+    "assets/img/9/IMG_8966.gif"
 ]
