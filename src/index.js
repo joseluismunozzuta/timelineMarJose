@@ -41,6 +41,8 @@ function setBackgroundInitial() {
 
 }
 
+const swipers = {};
+
 function buildFirstPagination() {
     data.forEach(containerData => {
         const containerId = `container${containerData.id}`;
@@ -48,7 +50,7 @@ function buildFirstPagination() {
 
         // Initialize a new Swiper instance for each container
         const timelineSwiper = new Swiper(swiperSelector, {
-            direction: 'vertical',
+            direction: 'horizontal',
             loop: false,
             speed: 1600,
             pagination: {
@@ -62,8 +64,10 @@ function buildFirstPagination() {
                 },
                 clickable: true
             },
-            nextButton: '.swiper-button-next',
-            prevButton: '.swiper-button-prev',
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
             initialSlide: 5,
             breakpoints: {
                 768: {
@@ -71,6 +75,8 @@ function buildFirstPagination() {
                 }
             }
         });
+
+        swipers[containerId] = timelineSwiper;
     });
 }
 
@@ -149,7 +155,7 @@ function addContainersAndSlides(dbDocs) {
                                         d="M214.6 41.4c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 141.2V448c0 17.7 14.3 32 32 32s32-14.3 32-32V141.2L329.4 246.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-160-160z" /></svg></span>
                         </button>
                     </a>
-                    <div class="swiper">
+                    <div class="swiper h-screen">
                         <div class="swiper-wrapper" id="swiper_container${initial_containerid}">
                         </div>
                         <div class="swiper-button-prev"></div>
@@ -265,7 +271,7 @@ function buildSecondPagination() {
         const swiperSelector = `#${containerId} .swiper`;
 
         const timelineSwiper = new Swiper(swiperSelector, {
-            direction: 'vertical',
+            direction: 'horizontal',
             loop: false,
             speed: 1600,
             pagination: {
@@ -279,8 +285,10 @@ function buildSecondPagination() {
                 },
                 clickable: true
             },
-            nextButton: '.swiper-button-next',
-            prevButton: '.swiper-button-prev',
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
             initialSlide: 5,
             breakpoints: {
                 768: {
@@ -332,7 +340,16 @@ function scrollButtonsLogic() {
     });
 }
 
+function firstMomentLogic() {
+    let firstMomentBtn = document.getElementById("scrollToContainer1");
+    firstMomentBtn.addEventListener('click', function () {
+        swipers["container1"].slideTo(0, 1600);
+    })
+}
+
 document.addEventListener("DOMContentLoaded", async function () {
+
+    startCountdown("2026-01-15T16:17:00");
 
     setBackgroundInitial();
 
@@ -340,6 +357,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     setAllCarouselItems();
 
+    /*
+    
     const collectionDocs = await getFirebaseDocs();
 
     //Convert to array
@@ -356,9 +375,54 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     buildSecondPagination();
 
+    
+    */
+
     scrollButtonsLogic();
+    firstMomentLogic();
 
 });
+
+function startCountdown(targetDateStr) {
+    const targetDate = new Date(targetDateStr).getTime();
+    console.log("Target date (ms): ", targetDate);
+
+    const daysEl = document.getElementById("countdays");
+    const hoursEl = document.getElementById("counthours");
+    const minutesEl = document.getElementById("countminutes");
+    const secondsEl = document.getElementById("countseconds");
+
+    if (!daysEl || !hoursEl || !minutesEl || !secondsEl) return;
+
+    const interval = setInterval(() => {
+
+        const now = Date.now();
+
+        const distance = now - targetDate;
+
+        if (distance <= 0) {
+            clearInterval(interval);
+            [daysEl, hoursEl, minutesEl, secondsEl].forEach(el => {
+                el.textContent = 0;
+                el.style.setProperty("--value", 0);
+            });
+            return;
+        }
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((distance / (1000 * 60)) % 60);
+        const seconds = Math.floor((distance / 1000) % 60);
+
+        const vals = [days, hours, minutes, seconds];
+        const els = [daysEl, hoursEl, minutesEl, secondsEl];
+
+        for (let i = 0; i < els.length; i++) {
+            els[i].textContent = vals[i];
+            els[i].style.setProperty("--value", vals[i]);
+        }
+    }, 1000);
+}
 
 const imagesUrls = [
     "assets/img/0/IMG-20260115-WA0177.jpg",
