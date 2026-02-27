@@ -47,22 +47,26 @@
                             </div>
                             <div class="bg-neutral rounded-box text-neutral-content flex flex-col p-2">
                                 <span class="countdown font-mono text-5xl">
-                                    <span style="--value:0;" aria-live="polite" aria-label="24" id="countminutes">0</span>
+                                    <span style="--value:0;" aria-live="polite" aria-label="24"
+                                        id="countminutes">0</span>
                                 </span>
                                 min
                             </div>
                             <div class="bg-neutral rounded-box text-neutral-content flex flex-col p-2">
                                 <span class="countdown font-mono text-5xl">
-                                    <span style="--value:0;" aria-live="polite" aria-label="59" id="countseconds">0</span>
+                                    <span style="--value:0;" aria-live="polite" aria-label="59"
+                                        id="countseconds">0</span>
                                 </span>
                                 seg
                             </div>
                         </div>
                         <!---->
 
-                        <p class="m-auto mb-3 px-4 text-white text-md">Aquí guardaremos para siempre esos momentos que tanto amamos compartir, 
+                        <p class="m-auto mb-3 px-4 text-white text-md">Aquí guardaremos para siempre esos momentos que
+                            tanto amamos compartir,
                             desde el primer día que nos vimos❤️</p>
-                        <button id="scrollToContainer1" class="w-7/12 m-auto btn btn-secondary" data-value="0">Donde todo empezó❤️</button>
+                        <button id="scrollToContainer1" class="w-7/12 m-auto btn btn-secondary" data-value="0">Donde
+                            todo empezó❤️</button>
                     </div>
 
                 </div>
@@ -70,6 +74,48 @@
         </div>
     </section>
     <section id="slides_section">
+
+        <dialog id="my_modal_2" class="modal">
+            <div class="modal-box m-7 w-10/12 max-h-7/12 bg-mauve-500">
+                <h3 class="text-lg text-center font-bold">Jose:</h3>
+                <p class="py-4 px-2 text-xs text-justify">Recuerdo estar emocionado todo el día; bueno, ambos lo estábamos! Veníamos contando los
+                    días para vernos por primera vez en persona y sabíamos lo importante que era ese día. Los días
+                    anteriores ya habíamos hablado de hacer muchas cosas juntos a futuro, y era fundamental que el día
+                    que conozcamos sintamos esa misma química en persona. Llegué un poquito tarde jaja y rogué que ese
+                    ascensor desde el sótano 2 suba lo más rápido posible para ir corriendo hacia donde estés. Caminé
+                    super rápido hacia la parte de la Marina de Plaza San Miguel y te busqué en una "banca" desde la
+                    cual me habías enviado una foto. Cuando te reconocí, la emoción fue al 100% estaba por verte en
+                    vivo, por primera vez ❤️ te escribí y te dije "O sea que también hicimos Match en color", creo que
+                    ahí supiste que yo ya estaba muy cerca. Cuando nos vimos, nos abrazamos y supe que todo sería
+                    hermoso (ya lo sabía, solo nos aseguramos) ❤️
+
+                    Desde el inicio, todo fue cómodo a tu lado. Caminar, conversar, preguntarte cosas, que tú sepas de
+                    mi vida... En el parque Maria Reiche, quería estar muy cerca de ti, pero me dije: debes ser
+                    paciente, espera las señales jaja Con el pasar de las horas, solo fue cuestión de que el sol se
+                    oculte un poco y no pudimos evitar el estar más cerca; te abracé, lo necesitaba, quería expresarte
+                    mi cariño desde ya 🥹 toda tú me encantabas, tu rostro, tus ojos, tus manos! Toda tú, yo te veía y
+                    me decía: wow, es real, estamos aquí abrazados y juntos. Y entonces sucedió, nuestro primer beso,
+                    muy tierno, lento, muy amoroso... No lo sentí apresurado, me encantabas, sentí que ya te
+                    conocía...❤️
+
+                    Qué bonito fue ese día, mi amor. Realmente, sabía que las cosas juntos irían muy bien, pero cuando
+                    nos vimos y me di cuenta de la complicidad que teníamos y del nivel de cariño, alegría y emoción que
+                    sentí contigo, supe que "ir despacio" no estaba en nuestros planes, quería quererte ya y muchísimo,
+                    y así fue ❤️
+
+                    La foto solo muestra lo conectados que ya nos sentíamos: estar cada uno en su asiento, pero ya desde
+                    ahí no nos íbamos a soltar nunca jamás ❤️
+
+                    Pd. La primera canción que cantamos juntos fue Nuestra Aflicción, bueno cantamos juntos una parte
+                    justo en la Tomás Valle antes de dejarte con Kao jaja
+
+                    Gracias por nuestro perfecto primer día; te quiero mucho ❤️</p>
+            </div>
+            <form method="dialog" class="modal-backdrop backdrop-blur-xs">
+                <button>close</button>
+            </form>
+        </dialog>
+
         <div class="container h-screen relative" id="container4">
             <div class="timeline">
                 <a class="absolute bottom-0 right-0 p-1 m-1 scroll-up" style="z-index:999" data-value="4">
@@ -421,40 +467,169 @@
                 <div class="swiper h-screen">
                     <div class="swiper-wrapper">
 
-                        <div class="swiper-slide" id="swiper-slide1" style="background-image: url(assets/img/back2.jpg)"
-                            data-year="1">
-
+                        <div class="swiper-slide" id="swiper-slide1" style="background-image: url(assets/img/back2.jpg)">
                             <div class="swiper-slide-content">
                                 <span class="timeline-year">15 de Enero</span>
-                                <div class="h-96 carousel carousel-vertical rounded-box" id="carousel0">
-
+                                <h4 class="timeline-title px-6" id="title1">La primera vez que nos vimos❤️</h4>
+                                <!-- Rating -->
+                                <div class="flex my-2 items-center justify-center mx-auto">
+                                    <div class="rating rating-sm rating-half">
+                                        <input type="radio" name="rating-11" class="rating-hidden" />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-1 bg-orange-400" aria-label="0.5 star" />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-2 bg-orange-400" aria-label="1 star" />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-1 bg-orange-400" aria-label="1.5 star"
+                                            />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-2 bg-orange-400" aria-label="2 star" />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-1 bg-orange-400" aria-label="2.5 star" />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-2 bg-orange-400" aria-label="3 star" />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-1 bg-orange-400" aria-label="3.5 star" />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-2 bg-orange-400" aria-label="4 star" />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-1 bg-orange-400" aria-label="4.5 star" checked="checked" />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-2 bg-orange-400" aria-label="5 star" />
+                                    </div>
                                 </div>
-                                <h4 class="timeline-title">La primera vez que nos vimos❤️</h4>
-                                <p class="timeline-text">
-                                </p>
+                                <div class="h-86 carousel carousel-vertical rounded-box" id="carousel0"></div>
+                                <div class="mt-2 flex flex-wrap flex-col items-center justify-center gap-1">
+                                    <!-- Lugar -->
+                                    <button class="btn btn-ghost btn-xs rounded-full">
+                                        <span class="opacity-70">📍</span>
+                                        <span id="place1">Parque María Reiche</span>
+                                    </button>
+                                    <!-- Canción -->
+                                    <div class="tooltip" data-tip="Abrir en Spotify">
+                                        <a class="btn btn-ghost btn-xs rounded-full" href="SPOTIFY_URL" target="_blank"
+                                            rel="noreferrer">
+                                            <span class="opacity-90">🎵</span>
+                                            <span>Nuestra aflicción</span>
+                                            <span class="opacity-60">— Pxndx</span>
+                                        </a>
+                                    </div>
+                                    <!-- Intimidad -->
+                                    <div class="tooltip" data-tip="Momentos íntimos ese día">
+                                        <span class="badge badge-ghost badge-lg rounded-full">
+                                            ❤️ × 2
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="my-1 p-3 grid grid-cols-2">
+                                    <div class="flex flex-col relative cursor-pointer" onclick="my_modal_2.showModal()">
+                                        <div class="avatar mx-auto transition-transform duration-300 hover:scale-110">
+                                            <div
+                                                class="ring-secondary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
+                                                <img id="avatarjose1" src="assets/img/avatars/jose1.jpg" />
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="heartbeat absolute -bottom-5 left-1/2 -translate-x-1/2 badge bg-gray-900 text-[8px] px-1" id="emotionjose1">
+                                            Emocionado🥹</div>
+                                    </div>
+
+                                    <div class="flex flex-col relative">
+                                        <div class="avatar mx-auto transition-transform duration-300 hover:scale-110">
+                                            <div
+                                                class="ring-secondary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
+                                                <img id="avatarmar1" src="assets/img/avatars/mar4.jpg" />
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="heartbeat absolute -bottom-5 left-1/2 -translate-x-1/2 badge bg-gray-900 text-[8px] px-1" id="emotionmar1">
+                                            Nerviosa😅</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="swiper-slide" id="swiper-slide2" style="background-image: url(assets/img/back2.jpg)"
-                            data-year="1">
-
+                        <div class="swiper-slide" id="swiper-slide2" style="background-image: url(assets/img/back2.jpg)">
                             <div class="swiper-slide-content">
-                                <span class="timeline-year">12 de Agosto</span>
-                                <h4 class="timeline-title text-md mb-1">Tu
-                                    carita 😍</h4>
-                                <div class="h-60 carousel carousel-vertical rounded-box" id="carousel1">
+                                <span class="timeline-year">17 de Enero</span>
+                                <h4 class="timeline-title px-6" id="title2">Gianfranco Cafe y rosita</h4>
+                                <!-- Rating -->
+                                <div class="flex my-2 items-center justify-center mx-auto">
+                                    <div class="rating rating-sm rating-half">
+                                        <input type="radio" name="rating-11" class="rating-hidden" />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-1 bg-orange-400" aria-label="0.5 star" />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-2 bg-orange-400" aria-label="1 star" />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-1 bg-orange-400" aria-label="1.5 star"
+                                            />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-2 bg-orange-400" aria-label="2 star" />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-1 bg-orange-400" aria-label="2.5 star" />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-2 bg-orange-400" aria-label="3 star" />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-1 bg-orange-400" aria-label="3.5 star" />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-2 bg-orange-400" aria-label="4 star" />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-1 bg-orange-400" aria-label="4.5 star" checked="checked" />
+                                        <input type="radio" name="rating-11"
+                                            class="mask mask-star-2 mask-half-2 bg-orange-400" aria-label="5 star" />
+                                    </div>
                                 </div>
-                                <p class="timeline-text">A las 6:29pm, me
-                                    llegó una fotito hermosa a mi Whatsapp,
-                                    una foto de tu carita 🥹
-                                    No sabes lo mucho que me encanta que me
-                                    mandes tu carita, y así comenzó a haber
-                                    cada vez más fotitos, algunas más
-                                    graciosas que otras, como la segunda y
-                                    la última jaja 😆
-                                    Pero siempre taaan bonita y tan guapa😍!
-                                </p>
+                                <div class="h-86 carousel carousel-vertical rounded-box" id="carousel1"></div>
+                                <div class="mt-2 flex flex-wrap flex-col items-center justify-center gap-1">
+                                    <!-- Lugar -->
+                                    <button class="btn btn-ghost btn-xs rounded-full">
+                                        <span class="opacity-70">📍</span>
+                                        <span id="place2">Parque María Reiche</span>
+                                    </button>
+                                    <!-- Canción -->
+                                    <div class="tooltip" data-tip="Abrir en Spotify">
+                                        <a class="btn btn-ghost btn-xs rounded-full" href="SPOTIFY_URL" target="_blank"
+                                            rel="noreferrer">
+                                            <span class="opacity-90">🎵</span>
+                                            <span>Nuestra aflicción</span>
+                                            <span class="opacity-60">— Pxndx</span>
+                                        </a>
+                                    </div>
+                                    <!-- Intimidad -->
+                                    <div class="tooltip" data-tip="Momentos íntimos ese día">
+                                        <span class="badge badge-ghost badge-lg rounded-full">
+                                            ❤️ × 2
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="my-1 p-3 grid grid-cols-2">
+                                    <div class="flex flex-col relative cursor-pointer" onclick="my_modal_2.showModal()">
+                                        <div class="avatar mx-auto transition-transform duration-300 hover:scale-110">
+                                            <div
+                                                class="ring-secondary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
+                                                <img id="avatarjose2" src="assets/img/avatars/jose1.jpg" />
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="heartbeat absolute -bottom-5 left-1/2 -translate-x-1/2 badge bg-gray-900 text-[8px] px-1" id="emotionjose2">
+                                            Emocionado🥹</div>
+                                    </div>
+
+                                    <div class="flex flex-col relative">
+                                        <div class="avatar mx-auto transition-transform duration-300 hover:scale-110">
+                                            <div
+                                                class="ring-secondary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
+                                                <img id="avatarmar2" src="assets/img/avatars/mar4.jpg" />
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="heartbeat absolute -bottom-5 left-1/2 -translate-x-1/2 badge bg-gray-900 text-[8px] px-1" id="emotionmar2">
+                                            Nerviosa😅</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
                         <div class="swiper-slide" id="swiper-slide3" style="background-image: url(assets/img/back2.jpg)"
                             data-year="1">
 
@@ -463,17 +638,7 @@
                                 <div class="h-60 carousel carousel-vertical rounded-box" id="carousel2">
                                 </div>
                                 <h4 class="timeline-title">3/4 with my babe</h4>
-                                <p class="timeline-text">Esa cara mía jaja
-                                    esta fue la primera vez que usamos la
-                                    función toma única en mi cel,
-                                    y salieron unas fotitos XD demasiado
-                                    hermosas, con besos, sonrisas 😍 y
-                                    también algunas caritas jaja 😆 ese día
-                                    ambos, al llegar a casa,
-                                    no parábamos de mirar nuestras fotos
-                                    juntos y lo lindasos que nos vemos
-                                    juntos ❤️ fue una tarde noche
-                                    maravillosa!
+                                <p class="timeline-text">
                                 </p>
                             </div>
                         </div>
@@ -487,17 +652,7 @@
                                 <div class="h-60 carousel carousel-vertical rounded-box" id="carousel3">
                                 </div>
 
-                                <p class="timeline-text">La primera vez que
-                                    conociste a mis personas importantes,
-                                    qué bonita noche!
-                                    Bailamos juntos después de mucho tiempo,
-                                    tomamos unos traguitos, te reíste de que
-                                    soy muy atento
-                                    con las huevadas que hablan otros😆
-                                    estabas hermosísima, y estábamos
-                                    realmente felices❤️!
-                                    Esa noche me enamoré muchísimo más de
-                                    ti, Bel hermosa🥹
+                                <p class="timeline-text">
                                 </p>
                             </div>
                         </div>
@@ -510,17 +665,7 @@
                                 </div>
                                 <h4 class="timeline-title">Gulandia🍔</h4>
                                 <p class="timeline-text">
-                                    ¿Recuerdas lo tiernas que nos parecieron
-                                    estas fotos? Salimos tan bonitos, tan
-                                    tiernitos
-                                    esperando por nuestra comidita en
-                                    Gulandia🥹 Ah pero revisa los chats de
-                                    Whatsapp de este día apenas salimos de
-                                    ahí
-                                    jajaja 🥵 esa noche tuvo de todo, qué
-                                    afortunados somos! Nuestra conexión
-                                    siempre tan completa y fuerte ❤️ Cómo no
-                                    me iba a enamorar de ti 😍
+
                                 </p>
                             </div>
                         </div>
