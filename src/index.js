@@ -1,21 +1,24 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, query, orderBy, documentId } from 'firebase/firestore';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCyyRztCmDuib7FbpfYhsk7KJsIlpySJck",
-    authDomain: "timelinebel.firebaseapp.com",
-    projectId: "timelinebel",
-    storageBucket: "timelinebel.appspot.com",
-    messagingSenderId: "998005125683",
-    appId: "1:998005125683:web:6b73f4f265724f48b86946"
+    apiKey: "AIzaSyBZfy3js-AuLcw1jmnTRjWVCQkmv1pUtSU",
+    authDomain: "marlove-9b442.firebaseapp.com",
+    projectId: "marlove-9b442",
+    storageBucket: "marlove-9b442.firebasestorage.app",
+    messagingSenderId: "148329779594",
+    appId: "1:148329779594:web:8fde6c7449d0ce6dce7873",
+    measurementId: "G-CFRRZKFDQL"
 };
 
-const data = [
+/*let data = [
     { id: 1, slides: [{ index: 1 }, { index: 2 }, { index: 3 }, { index: 4 }, { index: 5 }] },
     { id: 2, slides: [{ index: 6 }, { index: 7 }, { index: 8 }, { index: 9 }, { index: 10 }] },
     { id: 3, slides: [{ index: 11 }, { index: 12 }, { index: 13 }, { index: 14 }, { index: 15 }] },
     { id: 4, slides: [{ index: 16 }] }
-];
+];*/
+
+let data = [];
 
 const dbData = [];
 
@@ -30,14 +33,14 @@ function setBackgroundInitial() {
     backgroundinitial.style.backgroundPosition = "center";
 
 
-    for (var g = 1; g <= 16; g++) {
+    /*for (var g = 1; g <= 16; g++) {
         let swiper = document.getElementById(`swiper-slide${g}`);
         const min = 1;
         const max = 5;
         const random_number = Math.floor(Math.random() * (max - min + 1)) + min;
         swiper.style.backgroundImage = `url(assets/img/back${random_number}.jpg)`;
         swiper.style.backgroundPosition = "center";
-    }
+    }*/
 
 }
 
@@ -91,11 +94,11 @@ function setAllCarouselItems() {
 
     const finalArray = [];
 
-    for (let i = 0; i < 16; i++) {
+    for (let i = 1; i <= 15; i++) {
         let carousel = document.getElementById("carousel" + i);
-        const subArray = imagesUrls.filter(url => url.includes(`/img/${i}/`));
+        const subArray = imagesUrls.filter(url => url.includes(`/img/${i-1}/`));
         finalArray.push(subArray);
-        for (var j = 0; j < finalArray[i].length; j++) {
+        for (var j = 0; j < finalArray[i-1].length; j++) {
             carousel.innerHTML += carouselItemHtml1 + subArray[j] + carouselItemHtml2;
         }
     }
@@ -106,15 +109,15 @@ const getFirebaseDocs = async () => {
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const coll = collection(db, "/moments");
-    const reading = await getDocs(query(coll, orderBy("timestamp", "asc")));
+    const reading = await getDocs(query(coll, orderBy("momentId", "asc")));
     return reading;
 }
 
 function addContainersAndSlides(dbDocs) {
     let newConts = Math.ceil(dbDocs / 5);
     console.log(newConts);
-    let initial_containerid = 5;
-    let initial_index = 21;
+    let initial_containerid = 1;
+    let initial_index = 1;
     let last_indexes = dbDocs % 5;
 
     let containerSection = document.getElementById("slides_section");
@@ -125,10 +128,15 @@ function addContainersAndSlides(dbDocs) {
         let titulo;
         let descripcion;
         let url;
+        let sex = 0;
+        let ratingjose = 0;
+        let ratingmar = 0;
+        let place;
         let contDiv = document.createElement("div");
         contDiv.classList.add("container", "h-screen", "relative");
         contDiv.id = `container${initial_containerid}`;
         let previousDivId = `container${initial_containerid - 1}`;
+        console.log("Previous div id: ", previousDivId);
         let slides_container_html = `
                 <div class="timeline">
                     <a class="absolute bottom-0 right-0 p-1 m-1 scroll-up"
@@ -166,7 +174,12 @@ function addContainersAndSlides(dbDocs) {
         `;
         contDiv.innerHTML = slides_container_html;
         let referencePrevCont = document.getElementById(previousDivId);
-        containerSection.insertBefore(contDiv, referencePrevCont);
+        if(initial_containerid === 1){
+            containerSection.appendChild(contDiv);
+        } else {
+            containerSection.insertBefore(contDiv, referencePrevCont);
+        }
+
         let swiper_container_div = document.getElementById(`swiper_container${initial_containerid}`);
 
         let swiperHtml = ``;
@@ -182,30 +195,94 @@ function addContainersAndSlides(dbDocs) {
                 }).replace(/ de \d{4}$/, '');
 
                 titulo = elements[j][x].title;
-                descripcion = elements[j][x].description;
-                url = elements[j][x].imgUrl;
+                descripcion = elements[j][x].descriptionjose ?? null;
+                url = elements[j][x].imgUrl ?? null;
+                sex = elements[j][x].sex;
+                ratingjose = elements[j][x].ratingjose ?? null;;
+                ratingmar = elements[j][x].ratingmar ?? null;;
+                place = elements[j][x].place;
+                //url = elements[j][x].imgUrl;
                 let slideDiv = document.createElement("div");
                 slideDiv.classList.add("swiper-slide");
                 let min = 1;
                 let max = 5;
+                let javatar = 3;
+                let maravatar = 4;
                 let random_number = Math.floor(Math.random() * (max - min + 1)) + min;
+                let random_javatar = Math.floor(Math.random() * (javatar - 1 + 1)) + 1;
+                let random_maravatar = Math.floor(Math.random() * (maravatar - 1 + 1)) + 1;
                 slideDiv.style.backgroundImage = `url(assets/img/back${random_number}.jpg)`;
                 swiperHtml = `                
     
                 <div class="swiper-slide-content">
                     <span
                         class="timeline-year">${formattedDateWithoutYear}</span>
-                    <div
-                        class="h-60 carousel carousel-vertical rounded-box"
-                        id="carousel0">
-                        <div class="carousel-item h-full flex justify-center ">
-                    <img src="${url}">
+                    <h4 class="timeline-title px-6" id="title${initial_index}">${titulo}</h4>
+                    <div class="flex my-2 items-center justify-center mx-auto">
+                        <div class="rating rating-sm rating-half">
+                            <input type="radio" name="rating-2" class="rating-hidden" />
+
+                            <input type="radio" name="rating-${initial_index}" value="0.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                            <input type="radio" name="rating-${initial_index}" value="1"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                            <input type="radio" name="rating-${initial_index}" value="1.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                            <input type="radio" name="rating-${initial_index}" value="2"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                            <input type="radio" name="rating-${initial_index}" value="2.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                            <input type="radio" name="rating-${initial_index}" value="3"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                            <input type="radio" name="rating-${initial_index}" value="3.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                            <input type="radio" name="rating-${initial_index}" value="4"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                            <input type="radio" name="rating-${initial_index}" value="4.5" class="mask mask-star-2 mask-half-1 bg-orange-400" checked="checked" />
+                            <input type="radio" name="rating-${initial_index}" value="5"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                        </div>
                     </div>
-    
+
+                    <div class="h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>
+
+                    <div class="mt-2 flex flex-wrap flex-col items-center justify-center gap-1">
+                        <button class="btn btn-ghost btn-xs rounded-full">
+                            <span class="opacity-70">📍</span>
+                            <span id="place${initial_index}">${place}</span>
+                        </button>
+                        <div class="tooltip" data-tip="Abrir en Spotify">
+                            <a class="btn btn-ghost btn-xs rounded-full" href="SPOTIFY_URL" target="_blank"
+                                rel="noreferrer">
+                                <span class="opacity-90">🎵</span>
+                                <span>Nuestra aflicción</span>
+                                <span class="opacity-60">— Pxndx</span>
+                            </a>
+                        </div>
+                        <div class="tooltip" data-tip="Momentos íntimos ese día" id="intimacy${initial_index}">
+                            <span class="badge badge-ghost badge-lg rounded-full">
+                                ❤️ × ${sex}
+                            </span>
+                        </div>
                     </div>
-                    <h4 class="timeline-title">${titulo}</h4>
-                    <div class="timeline-text">${descripcion}
+
+                    <div class="my-1 p-3 grid grid-cols-2">
+                        <div class="flex flex-col relative cursor-pointer" onclick="my_modal_2.showModal()">
+                            <div class="avatar mx-auto transition-transform duration-300 hover:scale-110">
+                                <div
+                                    class="ring-secondary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
+                                    <img id="avatarjose${initial_index}" src="assets/img/avatars/jose${random_javatar}.jpg" />
+                                </div>
+                            </div>
+                            <div
+                                class="heartbeat absolute -bottom-5 left-1/2 -translate-x-1/2 badge bg-gray-900 text-[8px] px-1" id="emotionjose1">
+                                Emocionado🥹</div>
+                        </div>
+
+                        <div class="flex flex-col relative">
+                            <div class="avatar mx-auto transition-transform duration-300 hover:scale-110">
+                                <div
+                                    class="ring-secondary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
+                                    <img id="avatarmar${initial_index}" src="assets/img/avatars/mar${random_maravatar}.jpg" />
+                                </div>
+                            </div>
+                            <div
+                                class="heartbeat absolute -bottom-5 left-1/2 -translate-x-1/2 badge bg-gray-900 text-[8px] px-1" id="emotionmar1">
+                                Nerviosa😅</div>
+                        </div>
                     </div>
+
                 </div>
                 `;
                 slideDiv.innerHTML = swiperHtml;
@@ -225,30 +302,94 @@ function addContainersAndSlides(dbDocs) {
                     year: 'numeric'
                 }).replace(/ de \d{4}$/, '');
                 titulo = elements[j][x].title;
-                descripcion = elements[j][x].description;
-                url = elements[j][x].imgUrl;
+                descripcion = elements[j][x].descriptionjose ?? null;
+                url = elements[j][x].imgUrl ?? null;
+                sex = elements[j][x].sex;
+                ratingjose = elements[j][x].ratingjose ?? null;;
+                ratingmar = elements[j][x].ratingmar ?? null;;
+                place = elements[j][x].place;
+                //url = elements[j][x].imgUrl;
                 let slideDiv = document.createElement("div");
                 slideDiv.classList.add("swiper-slide");
                 let min = 1;
                 let max = 5;
+                let javatar = 3;
+                let maravatar = 4;
                 let random_number = Math.floor(Math.random() * (max - min + 1)) + min;
+                let random_javatar = Math.floor(Math.random() * (javatar - 1 + 1)) + 1;
+                let random_maravatar = Math.floor(Math.random() * (maravatar - 1 + 1)) + 1;
                 slideDiv.style.backgroundImage = `url(assets/img/back${random_number}.jpg)`;
                 swiperHtml = `                
     
                 <div class="swiper-slide-content">
                     <span
                         class="timeline-year">${formattedDateWithoutYear}</span>
-                    <div
-                        class="h-60 carousel carousel-vertical rounded-box"
-                        id="carousel0">
-                        <div class="carousel-item h-full flex justify-center ">
-                    <img src="${url}">
+                    <h4 class="timeline-title px-6" id="title${initial_index}">${titulo}</h4>
+                    <div class="flex my-2 items-center justify-center mx-auto">
+                        <div class="rating rating-sm rating-half">
+                            <input type="radio" name="rating-2" class="rating-hidden" />
+
+                            <input type="radio" name="rating-${initial_index}" value="0.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                            <input type="radio" name="rating-${initial_index}" value="1"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                            <input type="radio" name="rating-${initial_index}" value="1.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                            <input type="radio" name="rating-${initial_index}" value="2"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                            <input type="radio" name="rating-${initial_index}" value="2.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                            <input type="radio" name="rating-${initial_index}" value="3"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                            <input type="radio" name="rating-${initial_index}" value="3.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                            <input type="radio" name="rating-${initial_index}" value="4"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                            <input type="radio" name="rating-${initial_index}" value="4.5" class="mask mask-star-2 mask-half-1 bg-orange-400" checked="checked" />
+                            <input type="radio" name="rating-${initial_index}" value="5"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                        </div>
                     </div>
-    
+
+                    <div class="h-86 max-h-fit carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>
+
+                    <div class="mt-2 flex flex-wrap flex-col items-center justify-center gap-1">
+                        <button class="btn btn-ghost btn-xs rounded-full">
+                            <span class="opacity-70">📍</span>
+                            <span id="place${initial_index}">${place}</span>
+                        </button>
+                        <div class="tooltip" data-tip="Abrir en Spotify">
+                            <a class="btn btn-ghost btn-xs rounded-full" href="SPOTIFY_URL" target="_blank"
+                                rel="noreferrer">
+                                <span class="opacity-90">🎵</span>
+                                <span>Nuestra aflicción</span>
+                                <span class="opacity-60">— Pxndx</span>
+                            </a>
+                        </div>
+                        <div class="tooltip" data-tip="Momentos íntimos ese día" id="intimacy${initial_index}">
+                            <span class="badge badge-ghost badge-lg rounded-full">
+                                ❤️ × ${sex}
+                            </span>
+                        </div>
                     </div>
-                    <h4 class="timeline-title">${titulo}</h4>
-                    <div class="timeline-text">${descripcion}
+
+                    <div class="my-1 p-3 grid grid-cols-2">
+                        <div class="flex flex-col relative cursor-pointer" onclick="my_modal_2.showModal()">
+                            <div class="avatar mx-auto transition-transform duration-300 hover:scale-110">
+                                <div
+                                    class="ring-secondary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
+                                    <img id="avatarjose${initial_index}" src="assets/img/avatars/jose${random_javatar}.jpg" />
+                                </div>
+                            </div>
+                            <div
+                                class="heartbeat absolute -bottom-5 left-1/2 -translate-x-1/2 badge bg-gray-900 text-[8px] px-1" id="emotionjose1">
+                                Emocionado🥹</div>
+                        </div>
+
+                        <div class="flex flex-col relative">
+                            <div class="avatar mx-auto transition-transform duration-300 hover:scale-110">
+                                <div
+                                    class="ring-secondary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
+                                    <img id="avatarmar${initial_index}" src="assets/img/avatars/mar${random_maravatar}.jpg" />
+                                </div>
+                            </div>
+                            <div
+                                class="heartbeat absolute -bottom-5 left-1/2 -translate-x-1/2 badge bg-gray-900 text-[8px] px-1" id="emotionmar1">
+                                Nerviosa😅</div>
+                        </div>
                     </div>
+
                 </div>
                 `;
                 slideDiv.innerHTML = swiperHtml;
@@ -353,12 +494,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     setBackgroundInitial();
 
-    buildFirstPagination();
-
-    setAllCarouselItems();
-
-    /*
-    
     const collectionDocs = await getFirebaseDocs();
 
     //Convert to array
@@ -369,14 +504,27 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     let dbDocs = collectionDocs.size;
 
-    //console.log(dbDocs);
+    console.log("Total documents in collection: ", dbDocs);
+    console.log("Elements: ", elements);
+
+    data = elements.map((group, idx) => ({
+        id: idx + 1,
+        slides: group
+            // por si acaso alguno viniera sin momentId (no debería), lo filtramos
+            .filter(d => d?.momentId != null)
+            // y lo convertimos al formato { index: momentId }
+            .map(d => ({ index: d.momentId }))
+    }));
+
+    console.log("Data: ",data);
 
     addContainersAndSlides(dbDocs);
 
-    buildSecondPagination();
+    setAllCarouselItems();
 
-    
-    */
+    buildFirstPagination();
+
+    /*buildSecondPagination();*/
 
     scrollButtonsLogic();
     firstMomentLogic();
