@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, query, orderBy, documentId } from 'firebase/firestore';
+import { getFirestore, doc, collection, getDocs, getDoc, query, orderBy, documentId } from 'firebase/firestore';
 
 const firebaseConfig = {
     apiKey: "AIzaSyBZfy3js-AuLcw1jmnTRjWVCQkmv1pUtSU",
@@ -13,6 +13,8 @@ const firebaseConfig = {
 
 const LEFT_UID = 111;  // izquierda = Jose
 const RIGHT_UID = 112;  // derecha = Mar
+let LEFT_NAME;
+let RIGHT_NAME;
 
 let descriptionsGlobal = [];
 
@@ -29,17 +31,6 @@ function setBackgroundInitial() {
     const random_number = Math.floor(Math.random() * (max - min + 1)) + min;
     backgroundinitial.style.backgroundImage = `url(assets/img/hero${random_number}.jpg)`;
     backgroundinitial.style.backgroundPosition = "center";
-
-
-    /*for (var g = 1; g <= 16; g++) {
-        let swiper = document.getElementById(`swiper-slide${g}`);
-        const min = 1;
-        const max = 5;
-        const random_number = Math.floor(Math.random() * (max - min + 1)) + min;
-        swiper.style.backgroundImage = `url(assets/img/back${random_number}.jpg)`;
-        swiper.style.backgroundPosition = "center";
-    }*/
-
 }
 
 const swipers = {};
@@ -103,12 +94,22 @@ function setAllCarouselItems() {
 
 }
 
-const getFirebaseDocs = async () => {
+function initializeFirestore() {
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    return db;
+}
+
+const getFirebaseDocs = async (db) => {
     const coll = collection(db, "couples", "couple_mar_jose", "moments");
     const reading = await getDocs(query(coll, orderBy("momentId", "asc")));
     return reading;
+}
+
+const getCoupleDocs = async (db) => {
+    const coupleRef = doc(db, "couples", "couple_mar_jose");
+    const coupleData = await getDoc(coupleRef);
+    return coupleData;
 }
 
 function logicModal(element) {
@@ -165,6 +166,30 @@ function renderSide(name, avatarRand, feeling, initial_index) {
             id="emotion${name}${initial_index}">
             ${feeling ?? ""}
         </div>
+    </div>`;
+}
+
+function renderPlaceholderSide(name, avatarRand, initial_index) {
+    return `
+    <div class="group flex flex-col relative cursor-pointer opacity-80 hover:opacity-100"
+        data-id="${initial_index}" data-user="${name}" data-action="addComment">
+        
+        <div class="avatar mx-auto transition-transform duration-300 group-hover:scale-105">
+        <div class="ring-base-300 ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
+            <img id="avatar${name}${initial_index}"
+                class="grayscale contrast-75"
+                src="assets/img/avatars/${name}${avatarRand}.jpg" />
+        </div>
+        </div>
+
+        <button type="button"
+        class="absolute -bottom-5 left-1/2 -translate-x-1/2 badge badge-outline bg-gray-900 text-[10px] px-2 gap-1"
+        data-id="${initial_index}" data-user="${name}" data-action="addComment"
+        aria-label="Agregar comentario">
+        <span class="text-lg leading-none">+</span>
+        <span>Agregar</span>
+        </button>
+
     </div>`;
 }
 
@@ -273,14 +298,21 @@ function addContainersAndSlides(dbDocs) {
         let swiperHtml = ``;
         let leftTemp;
         let rightTemp;
+        let nameLeftTemp;
+        let nameRightTemp;
         if (j == newConts - 1 && last_indexes !== 0) {
             for (let x = 0; x < last_indexes; x++) {
 
+
+
                 const momentData = elements[j][x];
+                console.log("Processing moment id: ", momentData.momentId);
                 const p = momentData.participants || {};
 
                 leftTemp = momentData.createdBy;
                 rightTemp = leftTemp === LEFT_UID ? RIGHT_UID : LEFT_UID;
+                nameLeftTemp = leftTemp === LEFT_UID ? LEFT_NAME : RIGHT_NAME;
+                nameRightTemp = leftTemp === LEFT_UID ? RIGHT_NAME : LEFT_NAME;
 
                 const left = p[leftTemp] ?? null;
                 const right = p[rightTemp] ?? null;
@@ -323,8 +355,8 @@ function addContainersAndSlides(dbDocs) {
 
                 const showLeft = left != null;
                 const showRight = right != null;
-                const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index) : "";
-                const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index) : "";
+                const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index) : renderPlaceholderSide(nameLeftTemp, randomavatar2, initial_index);
+                const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index) : renderPlaceholderSide(nameRightTemp, randomavatar1, initial_index);
                 const showSong = song != null;
                 const songHtml = showSong ? renderSongHtml() : "";
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
@@ -367,10 +399,13 @@ function addContainersAndSlides(dbDocs) {
         } else {
             for (let x = 0; x < 5; x++) {
                 const momentData = elements[j][x];
+                console.log("Processing moment id: ", momentData.momentId);
                 const p = momentData.participants || {};
 
                 leftTemp = momentData.createdBy;
                 rightTemp = leftTemp === LEFT_UID ? RIGHT_UID : LEFT_UID;
+                nameLeftTemp = leftTemp === LEFT_UID ? LEFT_NAME : RIGHT_NAME;
+                nameRightTemp = leftTemp === LEFT_UID ? RIGHT_NAME : LEFT_NAME;
 
                 const left = p[leftTemp] ?? null;
                 const right = p[rightTemp] ?? null;
@@ -413,8 +448,8 @@ function addContainersAndSlides(dbDocs) {
 
                 const showLeft = left != null;
                 const showRight = right != null;
-                const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index) : "";
-                const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index) : "";
+                const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index) : renderPlaceholderSide(nameLeftTemp, randomavatar2, initial_index);
+                const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index) : renderPlaceholderSide(nameRightTemp, randomavatar1, initial_index);
                 const showSong = song != null;
                 const songHtml = showSong ? renderSongHtml() : "";
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
@@ -557,7 +592,21 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     setBackgroundInitial();
 
-    const collectionDocs = await getFirebaseDocs();
+    const db = initializeFirestore();
+
+    //const collectionDocs = await getFirebaseDocs();
+    const [coupleDocs, collectionDocs] = await Promise.all([
+        getCoupleDocs(db),
+        getFirebaseDocs(db)
+    ]);
+
+    console.log("Couple docs: ", coupleDocs.data());
+
+    LEFT_NAME = coupleDocs.data().displayNames[coupleDocs.data().members[0]].toLowerCase();
+    RIGHT_NAME = coupleDocs.data().displayNames[coupleDocs.data().members[1]].toLowerCase();
+
+    console.log("Left name: ", LEFT_NAME);
+    console.log("Right name: ", RIGHT_NAME);
 
     //Convert to array
     const dataArray = collectionDocs.docs.map(doc => doc.data());
