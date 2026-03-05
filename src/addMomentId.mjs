@@ -25,7 +25,7 @@ async function addMomentIdField() {
             const ref = doc(db, "moments", String(id));
 
             await updateDoc(ref, {
-                momentId: id
+                feeling: "Feliz"
             });
 
             console.log(`✅ momentId agregado al documento ${id}`);

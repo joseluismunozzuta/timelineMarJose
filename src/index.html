@@ -75,41 +75,37 @@
     </section>
     <section id="slides_section">
 
-        <dialog id="my_modal_2" class="modal">
+        <dialog id="descriptionModal" class="modal">
             <div class="modal-box m-7 w-10/12 max-h-7/12 bg-mauve-500">
-                <h3 class="text-lg text-center font-bold">Jose:</h3>
-                <p class="py-4 px-2 text-xs text-justify">Recuerdo estar emocionado todo el día; bueno, ambos lo estábamos! Veníamos contando los
-                    días para vernos por primera vez en persona y sabíamos lo importante que era ese día. Los días
-                    anteriores ya habíamos hablado de hacer muchas cosas juntos a futuro, y era fundamental que el día
-                    que conozcamos sintamos esa misma química en persona. Llegué un poquito tarde jaja y rogué que ese
-                    ascensor desde el sótano 2 suba lo más rápido posible para ir corriendo hacia donde estés. Caminé
-                    super rápido hacia la parte de la Marina de Plaza San Miguel y te busqué en una "banca" desde la
-                    cual me habías enviado una foto. Cuando te reconocí, la emoción fue al 100% estaba por verte en
-                    vivo, por primera vez ❤️ te escribí y te dije "O sea que también hicimos Match en color", creo que
-                    ahí supiste que yo ya estaba muy cerca. Cuando nos vimos, nos abrazamos y supe que todo sería
-                    hermoso (ya lo sabía, solo nos aseguramos) ❤️
+                <h3 class="text-lg text-center font-bold capitalize" id="modalUsername"></h3>
+                <p class="py-4 px-2 text-xs text-justify" id="modalDescription"></p>
+                <h2 class="text-center">Se calificó el momento con:</h2>
+                <div class="flex flex-col justify-center">
+                    <div class="rating rating-sm rating-half mx-auto">
+                        <input type="radio" disabled name="rating-modal" class="rating-hidden hidden" />
+                        <input type="radio" disabled name="rating-modal" value="0.5"
+                            class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                        <input type="radio" disabled name="rating-modal" value="1"
+                            class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                        <input type="radio" disabled name="rating-modal" value="1.5"
+                            class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                        <input type="radio" disabled name="rating-modal" value="2"
+                            class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                        <input type="radio" disabled name="rating-modal" value="2.5"
+                            class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                        <input type="radio" disabled name="rating-modal" value="3"
+                            class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                        <input type="radio" disabled name="rating-modal" value="3.5"
+                            class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                        <input type="radio" disabled name="rating-modal" value="4"
+                            class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                        <input type="radio" disabled name="rating-modal" value="4.5"
+                            class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                        <input type="radio" disabled name="rating-modal" value="5"
+                            class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                    </div>
+                </div>
 
-                    Desde el inicio, todo fue cómodo a tu lado. Caminar, conversar, preguntarte cosas, que tú sepas de
-                    mi vida... En el parque Maria Reiche, quería estar muy cerca de ti, pero me dije: debes ser
-                    paciente, espera las señales jaja Con el pasar de las horas, solo fue cuestión de que el sol se
-                    oculte un poco y no pudimos evitar el estar más cerca; te abracé, lo necesitaba, quería expresarte
-                    mi cariño desde ya 🥹 toda tú me encantabas, tu rostro, tus ojos, tus manos! Toda tú, yo te veía y
-                    me decía: wow, es real, estamos aquí abrazados y juntos. Y entonces sucedió, nuestro primer beso,
-                    muy tierno, lento, muy amoroso... No lo sentí apresurado, me encantabas, sentí que ya te
-                    conocía...❤️
-
-                    Qué bonito fue ese día, mi amor. Realmente, sabía que las cosas juntos irían muy bien, pero cuando
-                    nos vimos y me di cuenta de la complicidad que teníamos y del nivel de cariño, alegría y emoción que
-                    sentí contigo, supe que "ir despacio" no estaba en nuestros planes, quería quererte ya y muchísimo,
-                    y así fue ❤️
-
-                    La foto solo muestra lo conectados que ya nos sentíamos: estar cada uno en su asiento, pero ya desde
-                    ahí no nos íbamos a soltar nunca jamás ❤️
-
-                    Pd. La primera canción que cantamos juntos fue Nuestra Aflicción, bueno cantamos juntos una parte
-                    justo en la Tomás Valle antes de dejarte con Kao jaja
-
-                    Gracias por nuestro perfecto primer día; te quiero mucho ❤️</p>
             </div>
             <form method="dialog" class="modal-backdrop backdrop-blur-xs">
                 <button>close</button>

@@ -11,12 +11,10 @@ const firebaseConfig = {
     measurementId: "G-CFRRZKFDQL"
 };
 
-/*let data = [
-    { id: 1, slides: [{ index: 1 }, { index: 2 }, { index: 3 }, { index: 4 }, { index: 5 }] },
-    { id: 2, slides: [{ index: 6 }, { index: 7 }, { index: 8 }, { index: 9 }, { index: 10 }] },
-    { id: 3, slides: [{ index: 11 }, { index: 12 }, { index: 13 }, { index: 14 }, { index: 15 }] },
-    { id: 4, slides: [{ index: 16 }] }
-];*/
+const LEFT_UID = 111;  // izquierda = Jose
+const RIGHT_UID = 112;  // derecha = Mar
+
+let descriptionsGlobal = [];
 
 let data = [];
 
@@ -60,8 +58,8 @@ function buildFirstPagination() {
                 el: '.swiper-pagination',
                 type: 'bullets',
                 renderBullet: function (index, className) {
-                    console.log("Rendering index: ", index);
-                    console.log(containerData.slides[index]);
+                    //console.log("Rendering index: ", index);
+                    //console.log(containerData.slides[index]);
                     const number = containerData.slides[index].index;
                     return `<span class="${className}">${number}</span>`;
                 },
@@ -96,9 +94,9 @@ function setAllCarouselItems() {
 
     for (let i = 1; i <= 15; i++) {
         let carousel = document.getElementById("carousel" + i);
-        const subArray = imagesUrls.filter(url => url.includes(`/img/${i-1}/`));
+        const subArray = imagesUrls.filter(url => url.includes(`/img/${i - 1}/`));
         finalArray.push(subArray);
-        for (var j = 0; j < finalArray[i-1].length; j++) {
+        for (var j = 0; j < finalArray[i - 1].length; j++) {
             carousel.innerHTML += carouselItemHtml1 + subArray[j] + carouselItemHtml2;
         }
     }
@@ -108,14 +106,101 @@ function setAllCarouselItems() {
 const getFirebaseDocs = async () => {
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const coll = collection(db, "/moments");
+    const coll = collection(db, "couples", "couple_mar_jose", "moments");
     const reading = await getDocs(query(coll, orderBy("momentId", "asc")));
     return reading;
 }
 
+function logicModal(element) {
+    const id = Number(element.dataset.id);
+    const user = element.dataset.user;
+
+    let modal = document.getElementById("descriptionModal");
+    let modalTitle = document.getElementById("modalUsername");
+    let modalDescription = document.getElementById("modalDescription");
+
+    const descriptionData = descriptionsGlobal.find(d => d.momentId === id && d.descriptions[user] != null);
+    if (descriptionData != null) {
+        modalTitle.textContent = `${user}:`;
+        modalDescription.textContent = descriptionData.descriptions[user];
+
+        const v = String(descriptionData.ratings[user]);
+        const target = document.querySelector(`input[name="rating-modal"][value="${v}"]`);
+        if (target) target.checked = true;
+
+    }
+
+    modal.showModal();
+}
+
+function renderSongHtml() {
+    return `<div class="tooltip" data-tip="Abrir en Spotify">
+                            <a class="btn btn-ghost btn-xs rounded-full" href="SPOTIFY_URL" target="_blank"
+                                rel="noreferrer">
+                                <span class="opacity-90">🎵</span>
+                                <span>Nuestra aflicción</span>
+                                <span class="opacity-60">— Pxndx</span>
+                            </a>
+                        </div>`;
+}
+
+function renderIntimacy(initial_index, sex) {
+    return `
+    <div class="tooltip" data-tip="Momentos íntimos ese día" id="intimacy${initial_index}">
+                            <span class="badge badge-ghost badge-lg rounded-full">
+                                ❤️ × ${sex}
+                            </span>
+                        </div>`;
+}
+
+function renderSide(name, avatarRand, feeling, initial_index) {
+    return `
+    <div class="flex flex-col relative cursor-pointer" data-id="${initial_index}" data-user="${name}">
+        <div class="avatar mx-auto transition-transform duration-300 hover:scale-110">
+            <div class="ring-secondary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
+                <img id="avatar${name}${initial_index}" src="assets/img/avatars/${name}${avatarRand}.jpg" />
+            </div>
+        </div>
+        <div class="heartbeat absolute -bottom-5 left-1/2 -translate-x-1/2 badge bg-gray-900 text-[8px] px-1"
+            id="emotion${name}${initial_index}">
+            ${feeling ?? ""}
+        </div>
+    </div>`;
+}
+
+function renderRating(initial_index) {
+    return `<div class="rating rating-sm rating-half">
+                <input type="radio" disabled name="rating-${initial_index}" class="rating-hidden" />
+                <input type="radio" disabled name="rating-${initial_index}" value="0.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                <input type="radio" disabled name="rating-${initial_index}" value="1"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                <input type="radio" disabled name="rating-${initial_index}" value="1.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                <input type="radio" disabled name="rating-${initial_index}" value="2"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                <input type="radio" disabled name="rating-${initial_index}" value="2.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                <input type="radio" disabled name="rating-${initial_index}" value="3"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                <input type="radio" disabled name="rating-${initial_index}" value="3.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                <input type="radio" disabled name="rating-${initial_index}" value="4"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                <input type="radio" disabled name="rating-${initial_index}" value="4.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                <input type="radio" disabled name="rating-${initial_index}" value="5"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
+            </div>`;
+}
+
+function setRating(id, value) {
+    const v = String(value);
+    const target = document.querySelector(`input[name="rating-${id}"][value="${v}"]`);
+    if (target) target.checked = true;
+}
+
+function formatDate(timestamp) {
+    let date = new Date(timestamp.toMillis());
+    return date.toLocaleDateString('es-ES', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    }).replace(/ de \d{4}$/, '');
+}
+
 function addContainersAndSlides(dbDocs) {
     let newConts = Math.ceil(dbDocs / 5);
-    console.log(newConts);
     let initial_containerid = 1;
     let initial_index = 1;
     let last_indexes = dbDocs % 5;
@@ -126,12 +211,15 @@ function addContainersAndSlides(dbDocs) {
         let slides = [];
         let timestamp;
         let titulo;
-        let descripcion;
-        let url;
         let sex = 0;
-        let ratingjose = 0;
-        let ratingmar = 0;
+        let rating1 = 0;
+        let rating2 = 0;
         let place;
+        let feeling1;
+        let feeling2;
+        let name1;
+        let name2;
+        let song;
         let contDiv = document.createElement("div");
         contDiv.classList.add("container", "h-screen", "relative");
         contDiv.id = `container${initial_containerid}`;
@@ -174,7 +262,7 @@ function addContainersAndSlides(dbDocs) {
         `;
         contDiv.innerHTML = slides_container_html;
         let referencePrevCont = document.getElementById(previousDivId);
-        if(initial_containerid === 1){
+        if (initial_containerid === 1) {
             containerSection.appendChild(contDiv);
         } else {
             containerSection.insertBefore(contDiv, referencePrevCont);
@@ -183,218 +271,185 @@ function addContainersAndSlides(dbDocs) {
         let swiper_container_div = document.getElementById(`swiper_container${initial_containerid}`);
 
         let swiperHtml = ``;
+        let leftTemp;
+        let rightTemp;
         if (j == newConts - 1 && last_indexes !== 0) {
             for (let x = 0; x < last_indexes; x++) {
-                timestamp = elements[j][x].timestamp;
-                let date = new Date(timestamp.toMillis());
 
-                let formattedDateWithoutYear = date.toLocaleDateString('es-ES', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                }).replace(/ de \d{4}$/, '');
+                const momentData = elements[j][x];
+                const p = momentData.participants || {};
 
-                titulo = elements[j][x].title;
-                descripcion = elements[j][x].descriptionjose ?? null;
-                url = elements[j][x].imgUrl ?? null;
-                sex = elements[j][x].sex;
-                ratingjose = elements[j][x].ratingjose ?? null;;
-                ratingmar = elements[j][x].ratingmar ?? null;;
-                place = elements[j][x].place;
-                //url = elements[j][x].imgUrl;
+                leftTemp = momentData.createdBy;
+                rightTemp = leftTemp === LEFT_UID ? RIGHT_UID : LEFT_UID;
+
+                const left = p[leftTemp] ?? null;
+                const right = p[rightTemp] ?? null;
+
+                timestamp = momentData.timestamp;
+                let formattedDateWithoutYear = formatDate(timestamp);
+
+                titulo = momentData.title;
+                sex = momentData.sex;
+                place = momentData.place;
+                song = momentData.song ?? null;
+                name1 = left?.name ?? null;
+                name1 = name1?.toLowerCase();
+                name2 = right?.name ?? null;
+                name2 = name2?.toLowerCase();
+                rating1 = left?.rating ?? null;
+                rating2 = right?.rating ?? null;
+                if (rating1 === null) {
+                    rating1 = rating2;
+                }
+                if (rating2 === null) {
+                    rating2 = rating1;
+                }
+                let ratingAverage = (rating1 + rating2) / 2;
+                feeling1 = left?.feeling1 ?? null;
+                feeling2 = right?.feeling2 ?? null;
+                console.log(momentData);
+
                 let slideDiv = document.createElement("div");
                 slideDiv.classList.add("swiper-slide");
+
                 let min = 1;
                 let max = 5;
-                let javatar = 3;
-                let maravatar = 4;
+                let avatar1 = 3;
+                let avatar2 = 4;
                 let random_number = Math.floor(Math.random() * (max - min + 1)) + min;
-                let random_javatar = Math.floor(Math.random() * (javatar - 1 + 1)) + 1;
-                let random_maravatar = Math.floor(Math.random() * (maravatar - 1 + 1)) + 1;
+                let randomavatar1 = Math.floor(Math.random() * (avatar1 - 1 + 1)) + 1;
+                let randomavatar2 = Math.floor(Math.random() * (avatar2 - 1 + 1)) + 1;
                 slideDiv.style.backgroundImage = `url(assets/img/back${random_number}.jpg)`;
-                swiperHtml = `                
-    
-                <div class="swiper-slide-content">
+
+                const showLeft = left != null;
+                const showRight = right != null;
+                const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index) : "";
+                const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index) : "";
+                const showSong = song != null;
+                const songHtml = showSong ? renderSongHtml() : "";
+                const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
+
+                swiperHtml = `<div class="swiper-slide-content">
                     <span
                         class="timeline-year">${formattedDateWithoutYear}</span>
                     <h4 class="timeline-title px-6" id="title${initial_index}">${titulo}</h4>
                     <div class="flex my-2 items-center justify-center mx-auto">
-                        <div class="rating rating-sm rating-half">
-                            <input type="radio" name="rating-2" class="rating-hidden" />
-
-                            <input type="radio" name="rating-${initial_index}" value="0.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
-                            <input type="radio" name="rating-${initial_index}" value="1"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
-                            <input type="radio" name="rating-${initial_index}" value="1.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
-                            <input type="radio" name="rating-${initial_index}" value="2"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
-                            <input type="radio" name="rating-${initial_index}" value="2.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
-                            <input type="radio" name="rating-${initial_index}" value="3"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
-                            <input type="radio" name="rating-${initial_index}" value="3.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
-                            <input type="radio" name="rating-${initial_index}" value="4"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
-                            <input type="radio" name="rating-${initial_index}" value="4.5" class="mask mask-star-2 mask-half-1 bg-orange-400" checked="checked" />
-                            <input type="radio" name="rating-${initial_index}" value="5"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
-                        </div>
+                        ${ratingHtml}
                     </div>
-
                     <div class="h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>
-
                     <div class="mt-2 flex flex-wrap flex-col items-center justify-center gap-1">
                         <button class="btn btn-ghost btn-xs rounded-full">
                             <span class="opacity-70">📍</span>
                             <span id="place${initial_index}">${place}</span>
                         </button>
-                        <div class="tooltip" data-tip="Abrir en Spotify">
-                            <a class="btn btn-ghost btn-xs rounded-full" href="SPOTIFY_URL" target="_blank"
-                                rel="noreferrer">
-                                <span class="opacity-90">🎵</span>
-                                <span>Nuestra aflicción</span>
-                                <span class="opacity-60">— Pxndx</span>
-                            </a>
-                        </div>
-                        <div class="tooltip" data-tip="Momentos íntimos ese día" id="intimacy${initial_index}">
-                            <span class="badge badge-ghost badge-lg rounded-full">
-                                ❤️ × ${sex}
-                            </span>
-                        </div>
+                        ${songHtml}
+                        ${intimacyHtml}
                     </div>
-
                     <div class="my-1 p-3 grid grid-cols-2">
-                        <div class="flex flex-col relative cursor-pointer" onclick="my_modal_2.showModal()">
-                            <div class="avatar mx-auto transition-transform duration-300 hover:scale-110">
-                                <div
-                                    class="ring-secondary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
-                                    <img id="avatarjose${initial_index}" src="assets/img/avatars/jose${random_javatar}.jpg" />
-                                </div>
-                            </div>
-                            <div
-                                class="heartbeat absolute -bottom-5 left-1/2 -translate-x-1/2 badge bg-gray-900 text-[8px] px-1" id="emotionjose1">
-                                Emocionado🥹</div>
-                        </div>
-
-                        <div class="flex flex-col relative">
-                            <div class="avatar mx-auto transition-transform duration-300 hover:scale-110">
-                                <div
-                                    class="ring-secondary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
-                                    <img id="avatarmar${initial_index}" src="assets/img/avatars/mar${random_maravatar}.jpg" />
-                                </div>
-                            </div>
-                            <div
-                                class="heartbeat absolute -bottom-5 left-1/2 -translate-x-1/2 badge bg-gray-900 text-[8px] px-1" id="emotionmar1">
-                                Nerviosa😅</div>
-                        </div>
+                        ${leftHtml}
+                        ${rightHtml}
                     </div>
-
-                </div>
-                `;
+                </div>`;
                 slideDiv.innerHTML = swiperHtml;
                 swiper_container_div.appendChild(slideDiv);
+
+                setRating(initial_index, ratingAverage);
+
+                descriptionsGlobal.push({
+                    momentId: momentData.momentId, descriptions: { [name1]: left?.description ?? null, [name2]: right?.description ?? null },
+                    ratings: { [name1]: left?.rating ?? null, [name2]: right?.rating ?? null }
+                });
+
                 var ind = { index: initial_index };
                 slides.push(ind);
                 initial_index++;
             }
         } else {
             for (let x = 0; x < 5; x++) {
-                timestamp = elements[j][x].timestamp;
-                let date = new Date(timestamp.toMillis());
+                const momentData = elements[j][x];
+                const p = momentData.participants || {};
 
-                let formattedDateWithoutYear = date.toLocaleDateString('es-ES', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                }).replace(/ de \d{4}$/, '');
-                titulo = elements[j][x].title;
-                descripcion = elements[j][x].descriptionjose ?? null;
-                url = elements[j][x].imgUrl ?? null;
-                sex = elements[j][x].sex;
-                ratingjose = elements[j][x].ratingjose ?? null;;
-                ratingmar = elements[j][x].ratingmar ?? null;;
-                place = elements[j][x].place;
-                //url = elements[j][x].imgUrl;
+                leftTemp = momentData.createdBy;
+                rightTemp = leftTemp === LEFT_UID ? RIGHT_UID : LEFT_UID;
+
+                const left = p[leftTemp] ?? null;
+                const right = p[rightTemp] ?? null;
+
+                timestamp = momentData.timestamp;
+                let formattedDateWithoutYear = formatDate(timestamp);
+
+                titulo = momentData.title;
+                sex = momentData.sex;
+                place = momentData.place;
+                song = momentData.song ?? null;
+                name1 = left?.name ?? null;
+                name1 = name1?.toLowerCase();
+                name2 = right?.name ?? null;
+                name2 = name2?.toLowerCase();
+                rating1 = left?.rating ?? null;
+                rating2 = right?.rating ?? null;
+                if (rating1 === null) {
+                    rating1 = rating2;
+                }
+                if (rating2 === null) {
+                    rating2 = rating1;
+                }
+                let ratingAverage = (rating1 + rating2) / 2;
+                feeling1 = left?.feeling ?? null;
+                feeling2 = right?.feeling ?? null;
+                console.log(momentData);
+
                 let slideDiv = document.createElement("div");
                 slideDiv.classList.add("swiper-slide");
+
                 let min = 1;
                 let max = 5;
-                let javatar = 3;
-                let maravatar = 4;
+                let avatar1 = 3;
+                let avatar2 = 4;
                 let random_number = Math.floor(Math.random() * (max - min + 1)) + min;
-                let random_javatar = Math.floor(Math.random() * (javatar - 1 + 1)) + 1;
-                let random_maravatar = Math.floor(Math.random() * (maravatar - 1 + 1)) + 1;
+                let randomavatar1 = Math.floor(Math.random() * (avatar1 - 1 + 1)) + 1;
+                let randomavatar2 = Math.floor(Math.random() * (avatar2 - 1 + 1)) + 1;
                 slideDiv.style.backgroundImage = `url(assets/img/back${random_number}.jpg)`;
-                swiperHtml = `                
-    
-                <div class="swiper-slide-content">
+
+                const showLeft = left != null;
+                const showRight = right != null;
+                const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index) : "";
+                const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index) : "";
+                const showSong = song != null;
+                const songHtml = showSong ? renderSongHtml() : "";
+                const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
+                const ratingHtml = renderRating(initial_index);
+
+                swiperHtml = `<div class="swiper-slide-content">
                     <span
                         class="timeline-year">${formattedDateWithoutYear}</span>
                     <h4 class="timeline-title px-6" id="title${initial_index}">${titulo}</h4>
                     <div class="flex my-2 items-center justify-center mx-auto">
-                        <div class="rating rating-sm rating-half">
-                            <input type="radio" name="rating-2" class="rating-hidden" />
-
-                            <input type="radio" name="rating-${initial_index}" value="0.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
-                            <input type="radio" name="rating-${initial_index}" value="1"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
-                            <input type="radio" name="rating-${initial_index}" value="1.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
-                            <input type="radio" name="rating-${initial_index}" value="2"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
-                            <input type="radio" name="rating-${initial_index}" value="2.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
-                            <input type="radio" name="rating-${initial_index}" value="3"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
-                            <input type="radio" name="rating-${initial_index}" value="3.5" class="mask mask-star-2 mask-half-1 bg-orange-400" />
-                            <input type="radio" name="rating-${initial_index}" value="4"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
-                            <input type="radio" name="rating-${initial_index}" value="4.5" class="mask mask-star-2 mask-half-1 bg-orange-400" checked="checked" />
-                            <input type="radio" name="rating-${initial_index}" value="5"   class="mask mask-star-2 mask-half-2 bg-orange-400" />
-                        </div>
+                        ${ratingHtml}
                     </div>
-
-                    <div class="h-86 max-h-fit carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>
-
+                    <div class="h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>
                     <div class="mt-2 flex flex-wrap flex-col items-center justify-center gap-1">
                         <button class="btn btn-ghost btn-xs rounded-full">
                             <span class="opacity-70">📍</span>
                             <span id="place${initial_index}">${place}</span>
                         </button>
-                        <div class="tooltip" data-tip="Abrir en Spotify">
-                            <a class="btn btn-ghost btn-xs rounded-full" href="SPOTIFY_URL" target="_blank"
-                                rel="noreferrer">
-                                <span class="opacity-90">🎵</span>
-                                <span>Nuestra aflicción</span>
-                                <span class="opacity-60">— Pxndx</span>
-                            </a>
-                        </div>
-                        <div class="tooltip" data-tip="Momentos íntimos ese día" id="intimacy${initial_index}">
-                            <span class="badge badge-ghost badge-lg rounded-full">
-                                ❤️ × ${sex}
-                            </span>
-                        </div>
+                        ${songHtml}
+                        ${intimacyHtml}
                     </div>
-
                     <div class="my-1 p-3 grid grid-cols-2">
-                        <div class="flex flex-col relative cursor-pointer" onclick="my_modal_2.showModal()">
-                            <div class="avatar mx-auto transition-transform duration-300 hover:scale-110">
-                                <div
-                                    class="ring-secondary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
-                                    <img id="avatarjose${initial_index}" src="assets/img/avatars/jose${random_javatar}.jpg" />
-                                </div>
-                            </div>
-                            <div
-                                class="heartbeat absolute -bottom-5 left-1/2 -translate-x-1/2 badge bg-gray-900 text-[8px] px-1" id="emotionjose1">
-                                Emocionado🥹</div>
-                        </div>
-
-                        <div class="flex flex-col relative">
-                            <div class="avatar mx-auto transition-transform duration-300 hover:scale-110">
-                                <div
-                                    class="ring-secondary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
-                                    <img id="avatarmar${initial_index}" src="assets/img/avatars/mar${random_maravatar}.jpg" />
-                                </div>
-                            </div>
-                            <div
-                                class="heartbeat absolute -bottom-5 left-1/2 -translate-x-1/2 badge bg-gray-900 text-[8px] px-1" id="emotionmar1">
-                                Nerviosa😅</div>
-                        </div>
+                        ${leftHtml}
+                        ${rightHtml}
                     </div>
+                </div>`;
 
-                </div>
-                `;
                 slideDiv.innerHTML = swiperHtml;
                 swiper_container_div.appendChild(slideDiv);
                 var ind = { index: initial_index };
+                setRating(initial_index, ratingAverage);
+                descriptionsGlobal.push({
+                    momentId: momentData.momentId, descriptions: { [name1]: left?.description ?? null, [name2]: right?.description ?? null },
+                    ratings: { [name1]: left?.rating ?? null, [name2]: right?.rating ?? null }
+                });
                 slides.push(ind);
                 initial_index++;
             }
@@ -419,8 +474,8 @@ function buildSecondPagination() {
                 el: '.swiper-pagination',
                 type: 'bullets',
                 renderBullet: function (index, className) {
-                    console.log("Rendering index: ", index);
-                    console.log(containerData.slides[index]);
+                    //console.log("Rendering index: ", index);
+                    //console.log(containerData.slides[index]);
                     const number = containerData.slides[index].index;
                     return `<span class="${className}">${number}</span>`;
                 },
@@ -488,6 +543,14 @@ function firstMomentLogic() {
     })
 }
 
+function listenerModal() {
+    document.addEventListener("click", function (event) {
+        const element = event.target.closest("[data-id][data-user]");
+        if (!element) return;
+        logicModal(element);
+    });
+}
+
 document.addEventListener("DOMContentLoaded", async function () {
 
     startCountdown("2026-01-15T16:17:00");
@@ -505,7 +568,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     let dbDocs = collectionDocs.size;
 
     console.log("Total documents in collection: ", dbDocs);
-    console.log("Elements: ", elements);
+    //console.log("Elements: ", elements);
 
     data = elements.map((group, idx) => ({
         id: idx + 1,
@@ -516,7 +579,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             .map(d => ({ index: d.momentId }))
     }));
 
-    console.log("Data: ",data);
+    //console.log("Data: ", data);
 
     addContainersAndSlides(dbDocs);
 
@@ -524,10 +587,13 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     buildFirstPagination();
 
+    console.log("Descriptions global: ", descriptionsGlobal);
+
     /*buildSecondPagination();*/
 
     scrollButtonsLogic();
     firstMomentLogic();
+    listenerModal();
 
 });
 
