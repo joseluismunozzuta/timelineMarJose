@@ -36,7 +36,7 @@ function randomDateBetween(start, end) {
 
 // ====== CONFIG NUEVA ESTRUCTURA ======
 const COUPLE_ID = "couple_mar_jose";     // tu doc en /couples
-const UID_JOSE = 111;            // cámbialo por el uid real de José
+const UID_JOSE = "hgcP0phcGRVxw7MGZzYKwCkAfPa2";            // cámbialo por el uid real de José
 const UID_MAR = 112;              // cámbialo por el uid real de Mar
 
 async function seedCoupleAndMoments() {

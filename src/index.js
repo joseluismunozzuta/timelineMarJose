@@ -15,21 +15,32 @@ const firebaseConfig = {
 let auth = null;
 let db = null;
 let coupleId = null;
-
-const LEFT_UID = 111;  // izquierda = Jose
-const RIGHT_UID = 112;  // derecha = Mar
-let LEFT_NAME;
-let RIGHT_NAME;
+let LEFT_UID = null;
+let RIGHT_UID = null;
+let LEFT_NAME = null;;
+let RIGHT_NAME = null;
 
 let descriptionsGlobal = [];
-
 let data = [];
-
-const dbData = [];
-
+let dbData = [];
 let elements = [];
-
 const swipers = {};
+
+function resetTimeline() {
+    descriptionsGlobal = [];
+    data = [];
+    dbData = [];
+    elements = [];
+    const containerSection = document.getElementById("slides_section");
+    while (containerSection.firstChild) {
+        containerSection.removeChild(containerSection.firstChild);
+    }
+    LEFT_UID = null;
+    RIGHT_UID = null;
+    LEFT_NAME = null;
+    RIGHT_NAME = null;
+    coupleId = null;
+}
 
 function showAuthView() {
     document.getElementById("authView")?.classList.remove("hidden");
@@ -691,6 +702,7 @@ async function initTimeLine() {
 
     LEFT_NAME = coupleDocs.data().displayNames[coupleDocs.data().members[0]].toLowerCase();
     RIGHT_NAME = coupleDocs.data().displayNames[coupleDocs.data().members[1]].toLowerCase();
+    RIGHT_UID = coupleDocs.data().members.find(m => m !== LEFT_UID);
 
     console.log("Left name: ", LEFT_NAME);
     console.log("Right name: ", RIGHT_NAME);
@@ -732,6 +744,7 @@ function watchAuthState() {
     onAuthStateChanged(auth, async (user) => {
         showLoader();
         if (user) {
+            LEFT_UID = auth.currentUser.uid;
             var coupleFound = await readCoupleId();
             if (!coupleFound) {
                 setLoginError("No se encontró una pareja asociada a este usuario.");
@@ -743,6 +756,7 @@ function watchAuthState() {
             }
         } else {
             hideLoader();
+            resetTimeline();
             showAuthView();
         }
     });
