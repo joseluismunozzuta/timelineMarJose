@@ -166,6 +166,90 @@
         </form>
     </dialog>
 
+    <dialog id="registerMomentModal" class="modal">
+        <div class="modal-box m-7 w-10/12 max-h-[85vh] bg-mauve-500 overflow-y-auto">
+            <h3 class="text-lg text-center font-bold capitalize" id="registermodalUsername">
+                Registrar comentario
+            </h3>
+
+            <p class="py-2 px-2 text-xs text-justify opacity-80" id="registermodalDescription">
+                Completa cómo te sentiste y cómo calificarías este momento.
+            </p>
+
+            <div class="flex flex-col gap-4 mt-4">
+
+                <!-- Descripción -->
+                <div class="form-control">
+                    <label class="label" for="registerMomentText">
+                        <span class="label-text font-semibold">Descripción</span>
+                    </label>
+                    <textarea id="registerMomentText"
+                        class="textarea textarea-bordered w-full min-h-28 text-sm bg-base-100 text-base-content"
+                        placeholder="Escribe aquí tu comentario sobre este momento..."></textarea>
+                </div>
+
+                <!-- Feeling -->
+                <div class="form-control">
+                    <label class="label" for="registerMomentFeeling">
+                        <span class="label-text font-semibold">¿Cómo te sentiste?</span>
+                    </label>
+                    <select id="registerMomentFeeling"
+                        class="select select-bordered w-full bg-base-100 text-base-content">
+                        <option disabled selected value="">Selecciona un feeling</option>
+                    </select>
+                </div>
+
+                <!-- Rating -->
+                <div class="form-control">
+                    <label class="label justify-center" for="">
+                        <span class="label-text font-semibold">Calificación del momento</span>
+                    </label>
+
+                    <div class="flex justify-center">
+                        <div class="rating rating-sm rating-half mx-auto">
+                            <input type="radio" name="rating-registermodal" value="0" class="rating-hidden hidden"
+                                checked />
+                            <input type="radio" name="rating-registermodal" value="0.5"
+                                class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                            <input type="radio" name="rating-registermodal" value="1"
+                                class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                            <input type="radio" name="rating-registermodal" value="1.5"
+                                class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                            <input type="radio" name="rating-registermodal" value="2"
+                                class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                            <input type="radio" name="rating-registermodal" value="2.5"
+                                class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                            <input type="radio" name="rating-registermodal" value="3"
+                                class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                            <input type="radio" name="rating-registermodal" value="3.5"
+                                class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                            <input type="radio" name="rating-registermodal" value="4"
+                                class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                            <input type="radio" name="rating-registermodal" value="4.5"
+                                class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                            <input type="radio" name="rating-registermodal" value="5"
+                                class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="flex justify-end gap-2 mt-4">
+                    <button type="button" class="btn btn-ghost" onclick="registerMomentModal.close()">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="saveRegisterMomentBtn">
+                        Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <form method="dialog" class="modal-backdrop backdrop-blur-xs">
+            <button>close</button>
+        </form>
+    </dialog>
+
     <section id="slides_section">
     </section>
 

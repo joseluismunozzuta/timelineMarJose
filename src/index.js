@@ -15,9 +15,9 @@ const firebaseConfig = {
 let auth = null;
 let db = null;
 let coupleId = null;
-let LEFT_UID = null;
-let RIGHT_UID = null;
-let LEFT_NAME = null;;
+let MY_UID = null;
+let PARTNER_UID = null;
+let LEFT_NAME = null;
 let RIGHT_NAME = null;
 
 let descriptionsGlobal = [];
@@ -35,8 +35,8 @@ function resetTimeline() {
     while (containerSection.firstChild) {
         containerSection.removeChild(containerSection.firstChild);
     }
-    LEFT_UID = null;
-    RIGHT_UID = null;
+    MY_UID = null;
+    PARTNER_UID = null;
     LEFT_NAME = null;
     RIGHT_NAME = null;
     coupleId = null;
@@ -164,7 +164,7 @@ function buildFirstPagination() {
 function setAllCarouselItems() {
 
     let carouselItemHtml1 = `<div
-    class="carousel-item h-full flex justify-center ">
+    class="carousel-item h-full max-h-fit flex justify-center ">
     <img
         src=`;
     let carouselItemHtml2 = `>
@@ -235,6 +235,15 @@ function logicModal(element) {
     modal.showModal();
 }
 
+function logicRegisterModal(element) {
+    const id = Number(element.dataset.id);
+    const user = element.dataset.user;
+    let modal = document.getElementById("registerMomentModal");
+    let modalTitle = document.getElementById("registermodalUsername");
+    modal.showModal();
+}
+
+
 function renderSongHtml() {
     return `<div class="tooltip" data-tip="Abrir en Spotify">
                             <a class="btn btn-ghost btn-xs rounded-full" href="SPOTIFY_URL" target="_blank"
@@ -257,7 +266,7 @@ function renderIntimacy(initial_index, sex) {
 
 function renderSide(name, avatarRand, feeling, initial_index) {
     return `
-    <div class="flex flex-col relative cursor-pointer" data-id="${initial_index}" data-user="${name}">
+    <div class="flex flex-col relative cursor-pointer" data-id="${initial_index}" data-user="${name}" data-action="viewComment">
         <div class="avatar mx-auto transition-transform duration-300 hover:scale-110">
             <div class="ring-secondary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
                 <img id="avatar${name}${initial_index}" src="assets/img/avatars/${name}${avatarRand}.jpg" />
@@ -270,28 +279,54 @@ function renderSide(name, avatarRand, feeling, initial_index) {
     </div>`;
 }
 
-function renderPlaceholderSide(name, avatarRand, initial_index) {
-    return `
-    <div class="group flex flex-col relative cursor-pointer opacity-80 hover:opacity-100"
-        data-id="${initial_index}" data-user="${name}" data-action="addComment">
-        
-        <div class="avatar mx-auto transition-transform duration-300 group-hover:scale-105">
-        <div class="ring-base-300 ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
-            <img id="avatar${name}${initial_index}"
-                class="grayscale contrast-75"
-                src="assets/img/avatars/${name}${avatarRand}.jpg" />
-        </div>
-        </div>
+function renderPlaceholderSide(name, avatarRand, initial_index, myown) {
 
-        <button type="button"
-        class="absolute -bottom-5 left-1/2 -translate-x-1/2 badge badge-outline bg-gray-900 text-[10px] px-2 gap-1"
-        data-id="${initial_index}" data-user="${name}" data-action="addComment"
-        aria-label="Agregar comentario">
-        <span class="text-lg leading-none">+</span>
-        <span>Agregar</span>
-        </button>
+    if (myown) {
 
-    </div>`;
+        return `
+            <div class="group flex flex-col relative cursor-pointer opacity-80 hover:opacity-100"
+                data-id="${initial_index}" data-user="${name}" data-action="noComment">
+                
+                <div class="avatar mx-auto transition-transform duration-300 group-hover:scale-105">
+                <div class="ring-base-300 ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
+                    <img id="avatar${name}${initial_index}"
+                        class="grayscale contrast-75"
+                        src="assets/img/avatars/${name}${avatarRand}.jpg" />
+                </div>
+                </div>
+
+                <button type="button"
+                class="absolute -bottom-5 left-1/2 -translate-x-1/2 badge badge-outline bg-gray-900 text-[10px] px-2 gap-1"
+                data-id="${initial_index}" data-user="${name}" data-action="noComment">
+                <span class="text-[8px]">Se espera review de ${name.charAt(0).toUpperCase() + name.slice(1)} </span>
+                </button>
+
+            </div>`;
+
+    } else {
+
+        return `
+            <div class="group flex flex-col relative cursor-pointer opacity-80 hover:opacity-100"
+                data-id="${initial_index}" data-user="${name}" data-action="addComment">
+                
+                <div class="avatar mx-auto transition-transform duration-300 group-hover:scale-105">
+                <div class="ring-base-300 ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
+                    <img id="avatar${name}${initial_index}"
+                        class="grayscale contrast-75"
+                        src="assets/img/avatars/${name}${avatarRand}.jpg" />
+                </div>
+                </div>
+
+                <button type="button"
+                class="absolute -bottom-5 left-1/2 -translate-x-1/2 badge badge-outline bg-gray-900 text-[10px] px-2 gap-1"
+                data-id="${initial_index}" data-user="${name}" data-action="addComment"
+                aria-label="Agregar comentario">
+                <span class="text-lg leading-none">+</span>
+                <span>Agregar</span>
+                </button>
+
+            </div>`;
+    }
 }
 
 function renderRating(initial_index) {
@@ -325,33 +360,14 @@ function formatDate(timestamp) {
     }).replace(/ de \d{4}$/, '');
 }
 
-function addContainersAndSlides(dbDocs) {
-    let newConts = Math.ceil(dbDocs / 5);
-    let initial_containerid = 1;
-    let initial_index = 1;
-    let last_indexes = dbDocs % 5;
+function createContainer(initial_containerid) {
 
-    let containerSection = document.getElementById("slides_section");
-
-    for (let j = 0; j < newConts; j++) {
-        let slides = [];
-        let timestamp;
-        let titulo;
-        let sex = 0;
-        let rating1 = 0;
-        let rating2 = 0;
-        let place;
-        let feeling1;
-        let feeling2;
-        let name1;
-        let name2;
-        let song;
-        let contDiv = document.createElement("div");
-        contDiv.classList.add("container", "h-screen", "relative");
-        contDiv.id = `container${initial_containerid}`;
-        let previousDivId = `container${initial_containerid - 1}`;
-        console.log("Previous div id: ", previousDivId);
-        let slides_container_html = `
+    let contDiv = document.createElement("div");
+    contDiv.classList.add("container", "h-screen", "relative");
+    contDiv.id = `container${initial_containerid}`;
+    let previousDivId = `container${initial_containerid - 1}`;
+    console.log("Previous div id: ", previousDivId);
+    let slides_container_html = `
                 <div class="timeline">
                     <a class="absolute bottom-0 right-0 p-1 m-1 scroll-up"
                         style="z-index:999"
@@ -386,7 +402,33 @@ function addContainersAndSlides(dbDocs) {
                     </div>
                 </div>
         `;
-        contDiv.innerHTML = slides_container_html;
+    contDiv.innerHTML = slides_container_html;
+    return contDiv;
+}
+
+function addContainersAndSlides(dbDocs) {
+    let newConts = Math.ceil(dbDocs / 5);
+    let initial_containerid = 1;
+    let initial_index = 1;
+    let last_indexes = dbDocs % 5;
+
+    let containerSection = document.getElementById("slides_section");
+
+    for (let j = 0; j < newConts; j++) {
+        let slides = [];
+        let timestamp;
+        let titulo;
+        let sex = 0;
+        let rating1 = 0;
+        let rating2 = 0;
+        let place;
+        let feeling1;
+        let feeling2;
+        let name1;
+        let name2;
+        let song;
+        let contDiv = createContainer(initial_containerid);
+        let previousDivId = `container${initial_containerid - 1}`;
         let referencePrevCont = document.getElementById(previousDivId);
         if (initial_containerid === 1) {
             containerSection.appendChild(contDiv);
@@ -397,26 +439,25 @@ function addContainersAndSlides(dbDocs) {
         let swiper_container_div = document.getElementById(`swiper_container${initial_containerid}`);
 
         let swiperHtml = ``;
-        let leftTemp;
-        let rightTemp;
-        let nameLeftTemp;
-        let nameRightTemp;
+        let momentOwnerUid;
+        let partnerUidTemp;
+        let momentOwnerName;
+        let partnerName;
+
         if (j == newConts - 1 && last_indexes !== 0) {
             for (let x = 0; x < last_indexes; x++) {
-
-
 
                 const momentData = elements[j][x];
                 console.log("Processing moment id: ", momentData.momentId);
                 const p = momentData.participants || {};
 
-                leftTemp = momentData.createdBy;
-                rightTemp = leftTemp === LEFT_UID ? RIGHT_UID : LEFT_UID;
-                nameLeftTemp = leftTemp === LEFT_UID ? LEFT_NAME : RIGHT_NAME;
-                nameRightTemp = leftTemp === LEFT_UID ? RIGHT_NAME : LEFT_NAME;
+                momentOwnerUid = momentData.createdBy;
+                partnerUidTemp = momentOwnerUid === MY_UID ? PARTNER_UID : MY_UID;
+                momentOwnerName = momentOwnerUid === MY_UID ? LEFT_NAME : RIGHT_NAME;
+                partnerName = momentOwnerUid === MY_UID ? RIGHT_NAME : LEFT_NAME;
 
-                const left = p[leftTemp] ?? null;
-                const right = p[rightTemp] ?? null;
+                const left = p[momentOwnerUid] ?? null;
+                const right = p[partnerUidTemp] ?? null;
 
                 timestamp = momentData.timestamp;
                 let formattedDateWithoutYear = formatDate(timestamp);
@@ -440,7 +481,7 @@ function addContainersAndSlides(dbDocs) {
                 let ratingAverage = (rating1 + rating2) / 2;
                 feeling1 = left?.feeling1 ?? null;
                 feeling2 = right?.feeling2 ?? null;
-                console.log(momentData);
+                //console.log(momentData);
 
                 let slideDiv = document.createElement("div");
                 slideDiv.classList.add("swiper-slide");
@@ -456,8 +497,8 @@ function addContainersAndSlides(dbDocs) {
 
                 const showLeft = left != null;
                 const showRight = right != null;
-                const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index) : renderPlaceholderSide(nameLeftTemp, randomavatar2, initial_index);
-                const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index) : renderPlaceholderSide(nameRightTemp, randomavatar1, initial_index);
+                const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index) : renderPlaceholderSide(momentOwnerName, randomavatar2, initial_index, MY_UID === momentOwnerUid);
+                const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index) : renderPlaceholderSide(partnerName, randomavatar1, initial_index, MY_UID === momentOwnerUid);
                 const showSong = song != null;
                 const songHtml = showSong ? renderSongHtml() : "";
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
@@ -469,7 +510,7 @@ function addContainersAndSlides(dbDocs) {
                     <div class="flex my-2 items-center justify-center mx-auto">
                         ${ratingHtml}
                     </div>
-                    <div class="h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>
+                    <div class="mx-4 h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>
                     <div class="mt-2 flex flex-wrap flex-col items-center justify-center gap-1">
                         <button class="btn btn-ghost btn-xs rounded-full">
                             <span class="opacity-70">📍</span>
@@ -503,13 +544,13 @@ function addContainersAndSlides(dbDocs) {
                 console.log("Processing moment id: ", momentData.momentId);
                 const p = momentData.participants || {};
 
-                leftTemp = momentData.createdBy;
-                rightTemp = leftTemp === LEFT_UID ? RIGHT_UID : LEFT_UID;
-                nameLeftTemp = leftTemp === LEFT_UID ? LEFT_NAME : RIGHT_NAME;
-                nameRightTemp = leftTemp === LEFT_UID ? RIGHT_NAME : LEFT_NAME;
+                momentOwnerUid = momentData.createdBy;
+                partnerUidTemp = momentOwnerUid === MY_UID ? PARTNER_UID : MY_UID;
+                momentOwnerName = momentOwnerUid === MY_UID ? LEFT_NAME : RIGHT_NAME;
+                partnerName = momentOwnerUid === MY_UID ? RIGHT_NAME : LEFT_NAME;
 
-                const left = p[leftTemp] ?? null;
-                const right = p[rightTemp] ?? null;
+                const left = p[momentOwnerUid] ?? null;
+                const right = p[partnerUidTemp] ?? null;
 
                 timestamp = momentData.timestamp;
                 let formattedDateWithoutYear = formatDate(timestamp);
@@ -533,7 +574,7 @@ function addContainersAndSlides(dbDocs) {
                 let ratingAverage = (rating1 + rating2) / 2;
                 feeling1 = left?.feeling ?? null;
                 feeling2 = right?.feeling ?? null;
-                console.log(momentData);
+                //console.log(momentData);
 
                 let slideDiv = document.createElement("div");
                 slideDiv.classList.add("swiper-slide");
@@ -549,8 +590,8 @@ function addContainersAndSlides(dbDocs) {
 
                 const showLeft = left != null;
                 const showRight = right != null;
-                const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index) : renderPlaceholderSide(nameLeftTemp, randomavatar2, initial_index);
-                const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index) : renderPlaceholderSide(nameRightTemp, randomavatar1, initial_index);
+                const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index) : renderPlaceholderSide(momentOwnerName, randomavatar2, initial_index, MY_UID === momentOwnerUid);
+                const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index) : renderPlaceholderSide(partnerName, randomavatar1, initial_index, MY_UID === momentOwnerUid);
                 const showSong = song != null;
                 const songHtml = showSong ? renderSongHtml() : "";
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
@@ -563,7 +604,7 @@ function addContainersAndSlides(dbDocs) {
                     <div class="flex my-2 items-center justify-center mx-auto">
                         ${ratingHtml}
                     </div>
-                    <div class="h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>
+                    <div class="mx-4 h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>
                     <div class="mt-2 flex flex-wrap flex-col items-center justify-center gap-1">
                         <button class="btn btn-ghost btn-xs rounded-full">
                             <span class="opacity-70">📍</span>
@@ -681,9 +722,21 @@ function firstMomentLogic() {
 
 function listenerModal() {
     document.addEventListener("click", function (event) {
-        const element = event.target.closest("[data-id][data-user]");
+        const element = event.target.closest("[data-id][data-user][data-action]:not([data-action='noComment'])");
         if (!element) return;
-        logicModal(element);
+
+        const id = element.dataset.id;
+        const user = element.dataset.user;
+        const action = element.dataset.action;
+
+        if (action === "viewComment") {
+            logicModal(element);
+        }
+
+        if (action === "addComment") {
+            logicRegisterModal(element);
+        }
+
     });
 }
 
@@ -702,7 +755,7 @@ async function initTimeLine() {
 
     LEFT_NAME = coupleDocs.data().displayNames[coupleDocs.data().members[0]].toLowerCase();
     RIGHT_NAME = coupleDocs.data().displayNames[coupleDocs.data().members[1]].toLowerCase();
-    RIGHT_UID = coupleDocs.data().members.find(m => m !== LEFT_UID);
+    PARTNER_UID = coupleDocs.data().members.find(m => m !== MY_UID);
 
     console.log("Left name: ", LEFT_NAME);
     console.log("Right name: ", RIGHT_NAME);
@@ -714,8 +767,6 @@ async function initTimeLine() {
     }
 
     let dbDocs = collectionDocs.size;
-
-    console.log("Total documents in collection: ", dbDocs);
 
     data = elements.map((group, idx) => ({
         id: idx + 1,
@@ -744,7 +795,7 @@ function watchAuthState() {
     onAuthStateChanged(auth, async (user) => {
         showLoader();
         if (user) {
-            LEFT_UID = auth.currentUser.uid;
+            MY_UID = auth.currentUser.uid;
             var coupleFound = await readCoupleId();
             if (!coupleFound) {
                 setLoginError("No se encontró una pareja asociada a este usuario.");
@@ -831,7 +882,6 @@ const imagesUrls = [
     "assets/img/14/20260221_031519.jpg",
     "assets/img/15/20260222_171437.jpg",
     "assets/img/2/20260122_224946.jpg",
-    "assets/img/2/IMG_8480.jpg",
     "assets/img/2/IMG_8480.jpg",
     "assets/img/3/20260124_183549.jpg",
     "assets/img/3/20260125_002820.jpg",
