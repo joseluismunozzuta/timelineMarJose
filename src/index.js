@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getFirestore, doc, collection, getDocs, getDoc, query, orderBy, documentId } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -10,6 +11,10 @@ const firebaseConfig = {
     appId: "1:148329779594:web:8fde6c7449d0ce6dce7873",
     measurementId: "G-CFRRZKFDQL"
 };
+
+let auth = null;
+let db = null;
+let coupleId = null;
 
 const LEFT_UID = 111;  // izquierda = Jose
 const RIGHT_UID = 112;  // derecha = Mar
@@ -24,6 +29,81 @@ const dbData = [];
 
 let elements = [];
 
+const swipers = {};
+
+function showAuthView() {
+    document.getElementById("authView")?.classList.remove("hidden");
+    document.getElementById("appView")?.classList.add("hidden");
+    document.getElementById("slides_section")?.classList.add("hidden");
+}
+
+function showAppView() {
+    document.getElementById("authView")?.classList.add("hidden");
+    document.getElementById("appView")?.classList.remove("hidden");
+    document.getElementById("slides_section")?.classList.remove("hidden");
+}
+
+function showLoader() {
+    document.getElementById("loader")?.classList.remove("hidden");
+}
+
+function hideLoader() {
+    document.getElementById("loader")?.classList.add("hidden");
+}
+
+function setLoginError(msg) {
+    const el = document.getElementById("loginError");
+    if (!el) return;
+    if (!msg) {
+        el.classList.add("hidden");
+        el.textContent = "";
+    } else {
+        el.classList.remove("hidden");
+        el.textContent = msg;
+    }
+}
+
+function setLogOutButton() {
+    const btnLogout = document.getElementById("btnLogout");
+    btnLogout?.addEventListener("click", async () => {
+        try {
+            await signOut(auth);
+            // onAuthStateChanged se encargará de volver al login
+        } catch (e) {
+            console.error(e);
+            alert("No se pudo cerrar sesión.");
+        }
+    });
+}
+
+function setupAuthUI() {
+    const btnLogin = document.getElementById("btnLogin");
+
+
+    btnLogin?.addEventListener("click", async () => {
+        setLoginError(null);
+
+        const email = document.getElementById("loginEmail")?.value?.trim();
+        const password = document.getElementById("loginPassword")?.value;
+
+        if (!email || !password) {
+            setLoginError("Completa email y contraseña.");
+            return;
+        }
+
+        try {
+            showLoader();
+            await signInWithEmailAndPassword(auth, email, password);
+            // onAuthStateChanged se encargará de entrar al app view e iniciar timeline
+        } catch (e) {
+            console.error(e);
+            setLoginError("No se pudo iniciar sesión. Revisa credenciales.");
+            hideLoader();
+        }
+    });
+}
+
+
 function setBackgroundInitial() {
     let backgroundinitial = document.getElementById("container0");
     const min = 1;
@@ -32,8 +112,6 @@ function setBackgroundInitial() {
     backgroundinitial.style.backgroundImage = `url(assets/img/hero${random_number}.jpg)`;
     backgroundinitial.style.backgroundPosition = "center";
 }
-
-const swipers = {};
 
 function buildFirstPagination() {
     data.forEach(containerData => {
@@ -96,18 +174,30 @@ function setAllCarouselItems() {
 
 function initializeFirestore() {
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    return db;
+    auth = getAuth(app);
+    db = getFirestore(app);
+}
+
+async function readCoupleId() {
+    const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+    if (userDoc.exists()) {
+        coupleId = userDoc.data().activeCoupleId;
+        console.log("Couple ID: ", coupleId);
+        return true;
+    } else {
+        console.error("No user document found for UID: ", auth.currentUser.uid);
+        return false;
+    }
 }
 
 const getFirebaseDocs = async (db) => {
-    const coll = collection(db, "couples", "couple_mar_jose", "moments");
+    const coll = collection(db, "couples", coupleId, "moments");
     const reading = await getDocs(query(coll, orderBy("momentId", "asc")));
     return reading;
 }
 
 const getCoupleDocs = async (db) => {
-    const coupleRef = doc(db, "couples", "couple_mar_jose");
+    const coupleRef = doc(db, "couples", coupleId);
     const coupleData = await getDoc(coupleRef);
     return coupleData;
 }
@@ -586,15 +676,12 @@ function listenerModal() {
     });
 }
 
-document.addEventListener("DOMContentLoaded", async function () {
+async function initTimeLine() {
 
     startCountdown("2026-01-15T16:17:00");
 
     setBackgroundInitial();
 
-    const db = initializeFirestore();
-
-    //const collectionDocs = await getFirebaseDocs();
     const [coupleDocs, collectionDocs] = await Promise.all([
         getCoupleDocs(db),
         getFirebaseDocs(db)
@@ -617,7 +704,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     let dbDocs = collectionDocs.size;
 
     console.log("Total documents in collection: ", dbDocs);
-    //console.log("Elements: ", elements);
 
     data = elements.map((group, idx) => ({
         id: idx + 1,
@@ -628,8 +714,6 @@ document.addEventListener("DOMContentLoaded", async function () {
             .map(d => ({ index: d.momentId }))
     }));
 
-    //console.log("Data: ", data);
-
     addContainersAndSlides(dbDocs);
 
     setAllCarouselItems();
@@ -638,11 +722,38 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     console.log("Descriptions global: ", descriptionsGlobal);
 
-    /*buildSecondPagination();*/
-
     scrollButtonsLogic();
     firstMomentLogic();
     listenerModal();
+    setLogOutButton();
+}
+
+function watchAuthState() {
+    onAuthStateChanged(auth, async (user) => {
+        showLoader();
+        if (user) {
+            var coupleFound = await readCoupleId();
+            if (!coupleFound) {
+                setLoginError("No se encontró una pareja asociada a este usuario.");
+                showAuthView();
+            } else {
+                hideLoader();
+                showAppView();
+                await initTimeLine();
+            }
+        } else {
+            hideLoader();
+            showAuthView();
+        }
+    });
+}
+
+document.addEventListener("DOMContentLoaded", async function () {
+
+    initializeFirestore();
+
+    setupAuthUI();
+    watchAuthState();
 
 });
 

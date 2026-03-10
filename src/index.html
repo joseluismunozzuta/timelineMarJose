@@ -16,12 +16,67 @@
 </head>
 
 <body>
-    <section>
-        <div class="hero h-screen" id="container0" style="background-image: url(assets/img/back2.jpg);">
+    <!--Loader -->
+
+    <div id="loader" class="hidden h-screen w-screen place-items-center grid  bg-white/75 backdrop-filter 
+                backdrop-blur-lg backdrop-opacity-75 fixed top-0 right-0 z-500 justify-center items-center">
+        <div>
+            <svg style="left: 50%;
+        top: 50%;
+        position: absolute;
+        transform: translate(-50%, -50%) matrix(1, 0, 0, 1, 0, 0);" preserveAspectRatio="xMidYMid meet"
+                viewBox="0 0 187.3 93.7" height="300px" width="400px">
+                <path
+                    d="M93.9,46.4c9.3,9.5,13.8,17.9,23.5,17.9s17.5-7.8,17.5-17.5s-7.8-17.6-17.5-17.5c-9.7,0.1-13.3,7.2-22.1,17.1 				c-8.9,8.8-15.7,17.9-25.4,17.9s-17.5-7.8-17.5-17.5s7.8-17.5,17.5-17.5S86.2,38.6,93.9,46.4z"
+                    stroke-miterlimit="10" stroke-linejoin="round" stroke-linecap="round" stroke-width="4" fill="none"
+                    id="outline" stroke="#FF0000"></path>
+                <path
+                    d="M93.9,46.4c9.3,9.5,13.8,17.9,23.5,17.9s17.5-7.8,17.5-17.5s-7.8-17.6-17.5-17.5c-9.7,0.1-13.3,7.2-22.1,17.1 				c-8.9,8.8-15.7,17.9-25.4,17.9s-17.5-7.8-17.5-17.5s7.8-17.5,17.5-17.5S86.2,38.6,93.9,46.4z"
+                    stroke-miterlimit="10" stroke-linejoin="round" stroke-linecap="round" stroke-width="4"
+                    stroke="#FF0000" fill="none" opacity="0.05" id="outline-bg"></path>
+            </svg>
+        </div>
+    </div>
+
+    <!-- LOGIN VIEW -->
+    <section id="authView" class="min-h-screen flex items-center justify-center p-6 bg-pink-700">
+        <div class="card w-full max-w-md bg-zinc-100 shadow-xl shadow-gray-800">
+            <div class="card-body">
+                <h2 class="card-title text-2xl text-black">TimeLine ❤️</h2>
+                <p class="opacity-70 text-gray-700">Inicia sesión para ver el timeline.</p>
+
+                <div class="form-control mt-4">
+                    <label class="label"><span class="label-text text-gray-800">Email</span></label>
+                    <input id="loginEmail" type="email" class="input input-bordered" placeholder="correo@ejemplo.com" />
+                </div>
+
+                <div class="form-control mt-3">
+                    <label class="label"><span class="label-text text-gray-800">Contraseña</span></label>
+                    <input id="loginPassword" type="password" class="input input-bordered" placeholder="••••••••" />
+                </div>
+
+                <div class="alert alert-error mt-4 hidden" id="loginError"></div>
+
+                <div class="card-actions justify-end mt-4">
+                    <button id="btnLogin" class="btn btn-primary shadow-lg shadow-gray-600">Entrar</button>
+                </div>
+
+                <!-- opcional: botón registro, si quieres -->
+                <!-- <button id="btnRegister" class="btn btn-ghost btn-sm">Crear cuenta</button> -->
+            </div>
+        </div>
+    </section>
+
+    <!-- APP VIEW -->
+    <section id="appView">
+        <div class="hero h-screen relative" id="container0" style="background-image: url(assets/img/back2.jpg);">
             <div class="hero-overlay opacity-80"></div>
+            <button id="btnLogout"
+                class="z-200 btn btn-xs btn-error shadow-sm shadow-gray-700 absolute top-2 left-2 text-white">Cerrar
+                sesión</button>
             <div
                 class="h-full flex items-stretch justify-center max-w-7xl gap-4 p-4 z-0 text-center text-neutral-content">
-                <div class="max-w-md flex flex-col justify-between mb-3">
+                <div class="max-w-md flex flex-col justify-between my-3">
                     <div>
                         <h1 class="pt-4 mb-5 font-bold text-white text-4xl">Nuestros recuerdos❤️</h1>
                         <h2 class="pt-4 mb-5 font-bold text-white text-3xl italic">By: Mar & Jose</h2>
@@ -73,6 +128,7 @@
             </div>
         </div>
     </section>
+
     <section id="slides_section">
 
         <dialog id="descriptionModal" class="modal">
