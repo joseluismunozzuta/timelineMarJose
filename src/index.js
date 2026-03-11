@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { getFirestore, doc, collection, getDocs, getDoc, query, orderBy, documentId } from 'firebase/firestore';
+import { getFirestore, doc, collection, getDocs, getDoc, query, orderBy, documentId, serverTimestamp, updateDoc } from 'firebase/firestore';
 
 const firebaseConfig = {
     apiKey: "AIzaSyBZfy3js-AuLcw1jmnTRjWVCQkmv1pUtSU",
@@ -15,10 +15,14 @@ const firebaseConfig = {
 let auth = null;
 let db = null;
 let coupleId = null;
+let myName = null;
 let MY_UID = null;
 let PARTNER_UID = null;
 let LEFT_NAME = null;
 let RIGHT_NAME = null;
+let GENRE = null;
+let feelingTemp = null;
+let ratingTemp = 0;
 
 let descriptionsGlobal = [];
 let data = [];
@@ -40,6 +44,7 @@ function resetTimeline() {
     LEFT_NAME = null;
     RIGHT_NAME = null;
     coupleId = null;
+    GENRE = null;
 }
 
 function showAuthView() {
@@ -193,6 +198,7 @@ async function readCoupleId() {
     const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
     if (userDoc.exists()) {
         coupleId = userDoc.data().activeCoupleId;
+        myName = userDoc.data().displayName;
         console.log("Couple ID: ", coupleId);
         return true;
     } else {
@@ -236,13 +242,147 @@ function logicModal(element) {
 }
 
 function logicRegisterModal(element) {
+    var modal = document.getElementById("registerMomentModal");
     const id = Number(element.dataset.id);
-    const user = element.dataset.user;
-    let modal = document.getElementById("registerMomentModal");
-    let modalTitle = document.getElementById("registermodalUsername");
+    document.getElementById("registerMomentId").value = id;
+    fillFeelingSelect(GENRE);
     modal.showModal();
 }
 
+function listenerRegisterReviewBtn() {
+    document
+        .getElementById("saveRegisterMomentBtn")
+        .addEventListener("click", async () => {
+
+            showLoader();
+
+            var modal = document.getElementById("registerMomentModal");
+
+            const momentId = document.getElementById("registerMomentId").value;
+
+            await saveMomentParticipant(momentId);
+
+            reRenderSlide(momentId, feelingTemp, ratingTemp);
+
+            hideLoader();
+
+            modal.close();
+
+        });
+}
+
+function reRenderSlide(momentId, feeling, rating) {
+    var rightSideHtml = document.getElementById(`side${myName.toLowerCase()}${momentId}`);
+    if (rightSideHtml) {
+        rightSideHtml.outerHTML = renderSide(myName.toLowerCase(), randInt(1, 3), feeling, momentId);
+    }
+
+    let currentRate = document.querySelector(`input[name="rating-${momentId}"]:checked`)?.value;
+    let newRate = currentRate !== undefined ? (Number(currentRate) + Number(rating)) / 2 : rating;
+
+    setRating(momentId, newRate);
+    document.addEventListener("click", (e) => {
+        if (e.target && e.target.matches(`[data-action="viewComment"][data-id="${momentId}"]`)) {
+            logicModal(e.target);
+        }
+    });
+
+}
+
+function getRegisterMomentData() {
+
+    const description = document.getElementById("registerMomentText").value.trim();
+
+    const feeling = document.getElementById("registerMomentFeeling").value;
+
+    const ratingChecked = document.querySelector('input[name="rating-registermodal"]:checked');
+    const rating = ratingChecked ? Number(ratingChecked.value) : 0;
+
+    return {
+        description,
+        feeling,
+        rating
+    };
+}
+
+async function saveMomentParticipant(momentId) {
+
+    var uid = auth.currentUser.uid;
+
+    const { description, feeling, rating } = getRegisterMomentData();
+    feelingTemp = feeling;
+    ratingTemp = rating;
+
+    const momentRef = doc(db, "couples", coupleId, "moments", String(momentId));
+
+    const data = {
+        [`participants.${uid}`]: {
+            name: myName || "User",
+            description: description,
+            feeling: feeling,
+            rating: rating,
+            createdAt: serverTimestamp()
+        }
+    };
+
+    await updateDoc(momentRef, data);
+    updateDescriptionsGlobal(momentId, myName.toLowerCase(), description, rating);
+
+    console.log("Momento guardado correctamente");
+
+}
+
+function updateDescriptionsGlobal(momentId, userName, description, rating) {
+    const moment = descriptionsGlobal.find(item => Number(item.momentId) === Number(momentId));
+
+    if (!moment) {
+        descriptionsGlobal.push({
+            momentId: Number(momentId),
+            descriptions: {
+                [userName]: description
+            },
+            ratings: {
+                [userName]: rating
+            }
+        });
+        return;
+    }
+
+    if (!moment.descriptions) {
+        moment.descriptions = {};
+    }
+
+    if (!moment.ratings) {
+        moment.ratings = {};
+    }
+
+    moment.descriptions[userName] = description;
+    moment.ratings[userName] = rating;
+
+    if (Object.prototype.hasOwnProperty.call(moment.descriptions, "undefined")) {
+        delete moment.descriptions.undefined;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(moment.ratings, "undefined")) {
+        delete moment.ratings.undefined;
+    }
+}
+
+function fillFeelingSelect(genre) {
+
+    const select = document.getElementById("registerMomentFeeling");
+    select.innerHTML = `<option disabled selected value="">Selecciona un feeling</option>`;
+
+    const feelings = genre === "man" ? feelingsMan : feelingsWoman;
+
+    feelings.forEach(feeling => {
+        const option = document.createElement("option");
+        option.value = feeling;
+        option.textContent = feeling;
+        select.appendChild(option);
+    });
+
+}
 
 function renderSongHtml() {
     return `<div class="tooltip" data-tip="Abrir en Spotify">
@@ -266,7 +406,7 @@ function renderIntimacy(initial_index, sex) {
 
 function renderSide(name, avatarRand, feeling, initial_index) {
     return `
-    <div class="flex flex-col relative cursor-pointer" data-id="${initial_index}" data-user="${name}" data-action="viewComment">
+    <div class="flex flex-col relative cursor-pointer" data-id="${initial_index}" data-user="${name}" data-action="viewComment" id="side${name}${initial_index}">
         <div class="avatar mx-auto transition-transform duration-300 hover:scale-110">
             <div class="ring-secondary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
                 <img id="avatar${name}${initial_index}" src="assets/img/avatars/${name}${avatarRand}.jpg" />
@@ -285,7 +425,7 @@ function renderPlaceholderSide(name, avatarRand, initial_index, myown) {
 
         return `
             <div class="group flex flex-col relative cursor-pointer opacity-80 hover:opacity-100"
-                data-id="${initial_index}" data-user="${name}" data-action="noComment">
+                data-id="${initial_index}" data-user="${name}" data-action="noComment" id="side${name}${initial_index}">
                 
                 <div class="avatar mx-auto transition-transform duration-300 group-hover:scale-105">
                 <div class="ring-base-300 ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
@@ -307,7 +447,7 @@ function renderPlaceholderSide(name, avatarRand, initial_index, myown) {
 
         return `
             <div class="group flex flex-col relative cursor-pointer opacity-80 hover:opacity-100"
-                data-id="${initial_index}" data-user="${name}" data-action="addComment">
+                data-id="${initial_index}" data-user="${name}" data-action="addComment" id="side${name}${initial_index}">
                 
                 <div class="avatar mx-auto transition-transform duration-300 group-hover:scale-105">
                 <div class="ring-base-300 ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
@@ -406,6 +546,10 @@ function createContainer(initial_containerid) {
     return contDiv;
 }
 
+function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 function addContainersAndSlides(dbDocs) {
     let newConts = Math.ceil(dbDocs / 5);
     let initial_containerid = 1;
@@ -490,9 +634,9 @@ function addContainersAndSlides(dbDocs) {
                 let max = 5;
                 let avatar1 = 3;
                 let avatar2 = 4;
-                let random_number = Math.floor(Math.random() * (max - min + 1)) + min;
-                let randomavatar1 = Math.floor(Math.random() * (avatar1 - 1 + 1)) + 1;
-                let randomavatar2 = Math.floor(Math.random() * (avatar2 - 1 + 1)) + 1;
+                let random_number = randInt(min, max);
+                let randomavatar1 = randInt(1, avatar1);
+                let randomavatar2 = randInt(1, avatar2);
                 slideDiv.style.backgroundImage = `url(assets/img/back${random_number}.jpg)`;
 
                 const showLeft = left != null;
@@ -583,9 +727,9 @@ function addContainersAndSlides(dbDocs) {
                 let max = 5;
                 let avatar1 = 3;
                 let avatar2 = 4;
-                let random_number = Math.floor(Math.random() * (max - min + 1)) + min;
-                let randomavatar1 = Math.floor(Math.random() * (avatar1 - 1 + 1)) + 1;
-                let randomavatar2 = Math.floor(Math.random() * (avatar2 - 1 + 1)) + 1;
+                let random_number = randInt(min, max);
+                let randomavatar1 = randInt(1, avatar1);
+                let randomavatar2 = randInt(1, avatar2);
                 slideDiv.style.backgroundImage = `url(assets/img/back${random_number}.jpg)`;
 
                 const showLeft = left != null;
@@ -756,6 +900,7 @@ async function initTimeLine() {
     LEFT_NAME = coupleDocs.data().displayNames[coupleDocs.data().members[0]].toLowerCase();
     RIGHT_NAME = coupleDocs.data().displayNames[coupleDocs.data().members[1]].toLowerCase();
     PARTNER_UID = coupleDocs.data().members.find(m => m !== MY_UID);
+    GENRE = coupleDocs.data().genres[MY_UID];
 
     console.log("Left name: ", LEFT_NAME);
     console.log("Right name: ", RIGHT_NAME);
@@ -788,6 +933,7 @@ async function initTimeLine() {
     scrollButtonsLogic();
     firstMomentLogic();
     listenerModal();
+    listenerRegisterReviewBtn();
     setLogOutButton();
 }
 
@@ -895,3 +1041,27 @@ const imagesUrls = [
     "assets/img/8/IMG_8961.jpg",
     "assets/img/9/IMG_8966.gif"
 ]
+
+const feelingsMan = [
+    "Feliz 😄",
+    "Enamorado ❤️",
+    "Orgulloso 😌",
+    "Agradecido 🙏",
+    "Emocionado 🤩",
+    "Tranquilo 😌",
+    "Nervioso 😅",
+    "Sorprendido 😲",
+    "Melancólico 🥹"
+];
+
+const feelingsWoman = [
+    "Feliz 😊",
+    "Enamorada ❤️",
+    "Agradecida 🙏",
+    "Emocionada 🤩",
+    "Tranquila 😌",
+    "Nerviosa 😅",
+    "Ilusionada ✨",
+    "Sorprendida 😲",
+    "Melancólica 🥹"
+];

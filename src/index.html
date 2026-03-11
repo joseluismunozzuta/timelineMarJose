@@ -168,11 +168,14 @@
 
     <dialog id="registerMomentModal" class="modal">
         <div class="modal-box m-7 w-10/12 max-h-[85vh] bg-mauve-500 overflow-y-auto">
-            <h3 class="text-lg text-center font-bold capitalize" id="registermodalUsername">
-                Registrar comentario
+
+            <input type="hidden" id="registerMomentId" value="" />
+
+            <h3 class="text-lg text-center font-bold">
+                Escribir reseña
             </h3>
 
-            <p class="py-2 px-2 text-xs text-justify opacity-80" id="registermodalDescription">
+            <p class="py-2 px-2 text-xs text-justify opacity-80">
                 Completa cómo te sentiste y cómo calificarías este momento.
             </p>
 
@@ -184,7 +187,7 @@
                         <span class="label-text font-semibold">Descripción</span>
                     </label>
                     <textarea id="registerMomentText"
-                        class="textarea textarea-bordered w-full min-h-28 text-sm bg-base-100 text-base-content"
+                        class="textarea textarea-bordered w-full my-1 min-h-28 text-sm bg-base-100 text-base-content"
                         placeholder="Escribe aquí tu comentario sobre este momento..."></textarea>
                 </div>
 
@@ -201,7 +204,7 @@
 
                 <!-- Rating -->
                 <div class="form-control">
-                    <label class="label justify-center" for="">
+                    <label class="label justify-center">
                         <span class="label-text font-semibold">Calificación del momento</span>
                     </label>
 
@@ -249,6 +252,12 @@
             <button>close</button>
         </form>
     </dialog>
+
+    <div class="toast">
+        <div class="alert alert-info">
+            <span>New message arrived.</span>
+        </div>
+    </div>
 
     <section id="slides_section">
     </section>
