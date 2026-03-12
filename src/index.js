@@ -962,9 +962,10 @@ async function initTimeLine() {
 
     console.log("Couple docs: ", coupleDocs.data());
 
-    LEFT_NAME = coupleDocs.data().displayNames[coupleDocs.data().members[0]].toLowerCase();
-    RIGHT_NAME = coupleDocs.data().displayNames[coupleDocs.data().members[1]].toLowerCase();
+    
     PARTNER_UID = coupleDocs.data().members.find(m => m !== MY_UID);
+    LEFT_NAME = coupleDocs.data().displayNames[MY_UID].toLowerCase();
+    RIGHT_NAME = coupleDocs.data().displayNames[PARTNER_UID].toLowerCase();
     GENRE = coupleDocs.data().genres[MY_UID];
 
     console.log("Left name: ", LEFT_NAME);
@@ -1009,6 +1010,7 @@ function watchAuthState() {
             MY_UID = auth.currentUser.uid;
             var coupleFound = await readCoupleId();
             if (!coupleFound) {
+                hideLoader();
                 setLoginError("No se encontró una pareja asociada a este usuario.");
                 showAuthView();
             } else {
