@@ -219,23 +219,34 @@ const getCoupleDocs = async (db) => {
     return coupleData;
 }
 
-function logicModal(element) {
+function logicViewModal(element) {
     const id = Number(element.dataset.id);
     const user = element.dataset.user;
 
     let modal = document.getElementById("descriptionModal");
     let modalTitle = document.getElementById("modalUsername");
     let modalDescription = document.getElementById("modalDescription");
+    let modalUserNameFeeling = document.getElementById("modalUserNameFeeling");
+    let modalFeeling = document.getElementById("modalFeeling");
 
     const descriptionData = descriptionsGlobal.find(d => d.momentId === id && d.descriptions[user] != null);
     if (descriptionData != null) {
         modalTitle.textContent = `${user}:`;
         modalDescription.textContent = descriptionData.descriptions[user];
+        modalUserNameFeeling.textContent = `${user.charAt(0).toUpperCase() + user.slice(1)} se sintió:`;
+        modalFeeling.textContent = element.dataset.feeling ?? "Sin feeling registrado";
 
         const v = String(descriptionData.ratings[user]);
         const target = document.querySelector(`input[name="rating-modal"][value="${v}"]`);
         if (target) target.checked = true;
 
+    }
+
+    document.getElementById("editMoment")?.setAttribute("data-momentId", id);
+    if (element.dataset.useruid === MY_UID) {
+        document.getElementById("editMoment").classList.remove("hidden");
+    } else {
+        document.getElementById("editMoment").classList.add("hidden");
     }
 
     modal.showModal();
@@ -246,6 +257,8 @@ function logicRegisterModal(element) {
     const id = Number(element.dataset.id);
     document.getElementById("registerMomentId").value = id;
     fillFeelingSelect(GENRE);
+    document.getElementById("registerModalActionText").textContent = "Escribir reseña";
+    document.getElementById("saveRegisterMomentBtn").dataset.action = "add";
     modal.showModal();
 }
 
@@ -253,37 +266,57 @@ function listenerRegisterReviewBtn() {
     document
         .getElementById("saveRegisterMomentBtn")
         .addEventListener("click", async () => {
-
-            showLoader();
-
+            
             var modal = document.getElementById("registerMomentModal");
+            modal.close();
+            showLoader();
 
             const momentId = document.getElementById("registerMomentId").value;
 
-            await saveMomentParticipant(momentId);
+            var action = document.getElementById("saveRegisterMomentBtn").dataset.action;
+
+            if (action === "edit") {
+                document.getElementById("descriptionModal").close();
+                await saveMomentParticipant(momentId, false);
+            } else {
+                await saveMomentParticipant(momentId);
+            }
 
             reRenderSlide(momentId, feelingTemp, ratingTemp);
 
             hideLoader();
 
-            modal.close();
-
         });
+
+    document.getElementById("editMoment").addEventListener("click", async () => {
+        var modal = document.getElementById("registerMomentModal");
+        const id = Number(document.getElementById("editMoment").dataset.momentid);
+        document.getElementById("registerMomentId").value = id;
+        var currentDescription = document.getElementById("modalDescription").textContent;
+        var currentFeeling = document.getElementById("modalFeeling").textContent;
+        fillFeelingSelect(GENRE, currentFeeling);
+        var currentModalRating = document.querySelector(`input[name="rating-modal"]:checked`)?.value;
+        setRating("registermodal", currentModalRating);
+        document.getElementById("registerMomentText").value = currentDescription;
+        document.getElementById("registerModalActionText").textContent = "Editar reseña";
+        document.getElementById("saveRegisterMomentBtn").dataset.action = "edit";
+        modal.showModal();
+    });
 }
 
 function reRenderSlide(momentId, feeling, rating) {
     var rightSideHtml = document.getElementById(`side${myName.toLowerCase()}${momentId}`);
     if (rightSideHtml) {
-        rightSideHtml.outerHTML = renderSide(myName.toLowerCase(), randInt(1, 3), feeling, momentId);
+        rightSideHtml.outerHTML = renderSide(myName.toLowerCase(), randInt(1, 3), feeling, momentId, MY_UID);
     }
 
-    let currentRate = document.querySelector(`input[name="rating-${momentId}"]:checked`)?.value;
+    let currentRate = descriptionsGlobal.find(d=> d.momentId === Number(momentId))?.ratings[RIGHT_NAME.toLowerCase()] ?? undefined;
     let newRate = currentRate !== undefined ? (Number(currentRate) + Number(rating)) / 2 : rating;
 
     setRating(momentId, newRate);
     document.addEventListener("click", (e) => {
         if (e.target && e.target.matches(`[data-action="viewComment"][data-id="${momentId}"]`)) {
-            logicModal(e.target);
+            logicViewModal(e.target);
         }
     });
 
@@ -305,7 +338,7 @@ function getRegisterMomentData() {
     };
 }
 
-async function saveMomentParticipant(momentId) {
+async function saveMomentParticipant(momentId, justSaveParameter = true) {
 
     var uid = auth.currentUser.uid;
 
@@ -315,20 +348,34 @@ async function saveMomentParticipant(momentId) {
 
     const momentRef = doc(db, "couples", coupleId, "moments", String(momentId));
 
-    const data = {
-        [`participants.${uid}`]: {
-            name: myName || "User",
-            description: description,
-            feeling: feeling,
-            rating: rating,
-            createdAt: serverTimestamp()
-        }
-    };
+    let data = {};
+
+    if (justSaveParameter) {
+        data = {
+            [`participants.${uid}`]: {
+                name: myName || "User",
+                description: description,
+                feeling: feeling,
+                rating: rating,
+                createdAt: serverTimestamp()
+            }
+        };
+    } else {
+        data = {
+            [`participants.${uid}`]: {
+                name: myName || "User",
+                description: description,
+                feeling: feeling,
+                rating: rating,
+                updatedAt: serverTimestamp()
+            }
+        };
+    }
 
     await updateDoc(momentRef, data);
     updateDescriptionsGlobal(momentId, myName.toLowerCase(), description, rating);
 
-    console.log("Momento guardado correctamente");
+    console.log("Momento guardado correctamente");//TODO MANEJAR TOAST
 
 }
 
@@ -368,18 +415,36 @@ function updateDescriptionsGlobal(momentId, userName, description, rating) {
     }
 }
 
-function fillFeelingSelect(genre) {
+function fillFeelingSelect(genre, currentFeeling = null) {
 
     const select = document.getElementById("registerMomentFeeling");
-    select.innerHTML = `<option disabled selected value="">Selecciona un feeling</option>`;
+    select.innerHTML = "";
 
     const feelings = genre === "man" ? feelingsMan : feelingsWoman;
 
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "Selecciona un feeling";
+    defaultOption.disabled = true;
+
+    if (!currentFeeling) {
+        defaultOption.selected = true;
+    }
+
+    select.appendChild(defaultOption);
+
     feelings.forEach(feeling => {
+
         const option = document.createElement("option");
         option.value = feeling;
         option.textContent = feeling;
+
+        if (currentFeeling && feeling === currentFeeling) {
+            option.selected = true;
+        }
+
         select.appendChild(option);
+
     });
 
 }
@@ -404,9 +469,9 @@ function renderIntimacy(initial_index, sex) {
                         </div>`;
 }
 
-function renderSide(name, avatarRand, feeling, initial_index) {
+function renderSide(name, avatarRand, feeling, initial_index, sideUid) {
     return `
-    <div class="flex flex-col relative cursor-pointer" data-id="${initial_index}" data-user="${name}" data-action="viewComment" id="side${name}${initial_index}">
+    <div class="flex flex-col relative cursor-pointer" data-id="${initial_index}" data-feeling="${feeling}" data-user="${name}" data-action="viewComment" data-useruid="${sideUid}" id="side${name}${initial_index}">
         <div class="avatar mx-auto transition-transform duration-300 hover:scale-110">
             <div class="ring-secondary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
                 <img id="avatar${name}${initial_index}" src="assets/img/avatars/${name}${avatarRand}.jpg" />
@@ -419,13 +484,13 @@ function renderSide(name, avatarRand, feeling, initial_index) {
     </div>`;
 }
 
-function renderPlaceholderSide(name, avatarRand, initial_index, myown) {
+function renderPlaceholderSide(name, avatarRand, initial_index, myown, sideUid) {
 
     if (myown) {
 
         return `
             <div class="group flex flex-col relative cursor-pointer opacity-80 hover:opacity-100"
-                data-id="${initial_index}" data-user="${name}" data-action="noComment" id="side${name}${initial_index}">
+                data-id="${initial_index}" data-user="${name}" data-action="noComment" data-useruid="${sideUid}" id="side${name}${initial_index}">
                 
                 <div class="avatar mx-auto transition-transform duration-300 group-hover:scale-105">
                 <div class="ring-base-300 ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
@@ -447,7 +512,7 @@ function renderPlaceholderSide(name, avatarRand, initial_index, myown) {
 
         return `
             <div class="group flex flex-col relative cursor-pointer opacity-80 hover:opacity-100"
-                data-id="${initial_index}" data-user="${name}" data-action="addComment" id="side${name}${initial_index}">
+                data-id="${initial_index}" data-user="${name}" data-action="addComment" data-useruid="${sideUid}" id="side${name}${initial_index}">
                 
                 <div class="avatar mx-auto transition-transform duration-300 group-hover:scale-105">
                 <div class="ring-base-300 ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
@@ -641,8 +706,8 @@ function addContainersAndSlides(dbDocs) {
 
                 const showLeft = left != null;
                 const showRight = right != null;
-                const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index) : renderPlaceholderSide(momentOwnerName, randomavatar2, initial_index, MY_UID === momentOwnerUid);
-                const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index) : renderPlaceholderSide(partnerName, randomavatar1, initial_index, MY_UID === momentOwnerUid);
+                const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index, momentOwnerUid) : renderPlaceholderSide(momentOwnerName, randomavatar2, initial_index, MY_UID === momentOwnerUid, momentOwnerUid);
+                const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index, partnerUidTemp) : renderPlaceholderSide(partnerName, randomavatar1, initial_index, MY_UID === momentOwnerUid, partnerUidTemp);
                 const showSong = song != null;
                 const songHtml = showSong ? renderSongHtml() : "";
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
@@ -734,8 +799,8 @@ function addContainersAndSlides(dbDocs) {
 
                 const showLeft = left != null;
                 const showRight = right != null;
-                const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index) : renderPlaceholderSide(momentOwnerName, randomavatar2, initial_index, MY_UID === momentOwnerUid);
-                const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index) : renderPlaceholderSide(partnerName, randomavatar1, initial_index, MY_UID === momentOwnerUid);
+                const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index, momentOwnerUid) : renderPlaceholderSide(momentOwnerName, randomavatar2, initial_index, MY_UID === momentOwnerUid, momentOwnerUid);
+                const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index, partnerUidTemp) : renderPlaceholderSide(partnerName, randomavatar1, initial_index, MY_UID === momentOwnerUid, partnerUidTemp);
                 const showSong = song != null;
                 const songHtml = showSong ? renderSongHtml() : "";
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
@@ -874,7 +939,7 @@ function listenerModal() {
         const action = element.dataset.action;
 
         if (action === "viewComment") {
-            logicModal(element);
+            logicViewModal(element);
         }
 
         if (action === "addComment") {

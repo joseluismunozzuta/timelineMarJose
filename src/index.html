@@ -19,7 +19,7 @@
     <!--Loader -->
 
     <div id="loader" class="hidden h-screen w-screen place-items-center grid  bg-white/75 backdrop-filter 
-                backdrop-blur-lg backdrop-opacity-75 fixed top-0 right-0 z-500 justify-center items-center">
+                backdrop-blur-lg backdrop-opacity-75 fixed top-0 right-0 z-5000 justify-center items-center">
         <div>
             <svg style="left: 50%;
         top: 50%;
@@ -129,11 +129,13 @@
         </div>
     </section>
 
-    <dialog id="descriptionModal" class="modal">
+    <dialog id="descriptionModal" class="modal z-2000">
         <div class="modal-box m-7 w-10/12 max-h-7/12 bg-mauve-500">
             <h3 class="text-lg text-center font-bold capitalize" id="modalUsername"></h3>
             <p class="py-4 px-2 text-xs text-justify" id="modalDescription"></p>
-            <h2 class="text-center">Se calificó el momento con:</h2>
+            <h2 class="text-center" id="modalUserNameFeeling"></h2>
+            <h2 class="text-center font-bold" id="modalFeeling"></h2>
+            <h2 class="text-center">y calificó el momento con:</h2>
             <div class="flex flex-col justify-center">
                 <div class="rating rating-sm rating-half mx-auto">
                     <input type="radio" disabled name="rating-modal" class="rating-hidden hidden" />
@@ -158,6 +160,8 @@
                     <input type="radio" disabled name="rating-modal" value="5"
                         class="mask mask-star-2 mask-half-2 bg-orange-400" />
                 </div>
+
+                <button class="btn btn-primary btn-sm w-1/2 mx-auto my-3 hidden" id="editMoment" data-momentid="0">Editar</button>
             </div>
 
         </div>
@@ -166,12 +170,12 @@
         </form>
     </dialog>
 
-    <dialog id="registerMomentModal" class="modal">
-        <div class="modal-box m-7 w-10/12 max-h-[85vh] bg-mauve-500 overflow-y-auto">
+    <dialog id="registerMomentModal" class="modal z-2000">
+        <div class="modal-box mx-7 my-4 w-10/12 max-h-[90vh] bg-mauve-500 overflow-y-auto">
 
             <input type="hidden" id="registerMomentId" value="" />
 
-            <h3 class="text-lg text-center font-bold">
+            <h3 class="text-lg text-center font-bold" id="registerModalActionText">
                 Escribir reseña
             </h3>
 
@@ -187,7 +191,7 @@
                         <span class="label-text font-semibold">Descripción</span>
                     </label>
                     <textarea id="registerMomentText"
-                        class="textarea textarea-bordered w-full my-1 min-h-28 text-sm bg-base-100 text-base-content"
+                        class="textarea textarea-bordered w-full my-1 min-h-56 text-sm bg-base-100 text-base-content"
                         placeholder="Escribe aquí tu comentario sobre este momento..."></textarea>
                 </div>
 
@@ -241,7 +245,7 @@
                     <button type="button" class="btn btn-ghost" onclick="registerMomentModal.close()">
                         Cancelar
                     </button>
-                    <button type="button" class="btn btn-primary" id="saveRegisterMomentBtn">
+                    <button type="button" class="btn btn-primary" data-action="" id="saveRegisterMomentBtn">
                         Guardar
                     </button>
                 </div>
