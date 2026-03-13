@@ -2,6 +2,8 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getFirestore, doc, collection, getDocs, getDoc, query, orderBy, documentId, serverTimestamp, updateDoc } from 'firebase/firestore';
 
+const SPOTIFY_SEARCH_URL = "https://us-central1-marlove-9b442.cloudfunctions.net/spotifySearch";
+
 const firebaseConfig = {
     apiKey: "AIzaSyBZfy3js-AuLcw1jmnTRjWVCQkmv1pUtSU",
     authDomain: "marlove-9b442.firebaseapp.com",
@@ -266,7 +268,7 @@ function listenerRegisterReviewBtn() {
     document
         .getElementById("saveRegisterMomentBtn")
         .addEventListener("click", async () => {
-            
+
             var modal = document.getElementById("registerMomentModal");
             modal.close();
             showLoader();
@@ -310,7 +312,7 @@ function reRenderSlide(momentId, feeling, rating) {
         rightSideHtml.outerHTML = renderSide(myName.toLowerCase(), randInt(1, 3), feeling, momentId, MY_UID);
     }
 
-    let currentRate = descriptionsGlobal.find(d=> d.momentId === Number(momentId))?.ratings[RIGHT_NAME.toLowerCase()] ?? undefined;
+    let currentRate = descriptionsGlobal.find(d => d.momentId === Number(momentId))?.ratings[RIGHT_NAME.toLowerCase()] ?? undefined;
     let newRate = currentRate !== undefined ? (Number(currentRate) + Number(rating)) / 2 : rating;
 
     setRating(momentId, newRate);
@@ -704,15 +706,33 @@ function addContainersAndSlides(dbDocs) {
                 let randomavatar2 = randInt(1, avatar2);
                 slideDiv.style.backgroundImage = `url(assets/img/back${random_number}.jpg)`;
 
+                let myOwn = MY_UID === momentOwnerUid;
+
                 const showLeft = left != null;
                 const showRight = right != null;
-                const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index, momentOwnerUid) : renderPlaceholderSide(momentOwnerName, randomavatar2, initial_index, MY_UID === momentOwnerUid, momentOwnerUid);
-                const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index, partnerUidTemp) : renderPlaceholderSide(partnerName, randomavatar1, initial_index, MY_UID === momentOwnerUid, partnerUidTemp);
+                const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index, momentOwnerUid) : renderPlaceholderSide(momentOwnerName, randomavatar2, initial_index, myOwn, momentOwnerUid);
+                const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index, partnerUidTemp) : renderPlaceholderSide(partnerName, randomavatar1, initial_index, myOwn, partnerUidTemp);
                 const showSong = song != null;
                 const songHtml = showSong ? renderSongHtml() : "";
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
+                const editMomentButtonHtml = myOwn === true ? ` <button class="btn btn-ghost btn-xs top-0 left-0 absolute" data-id="${initial_index}" data-action="editMoment">
+                        <!-- icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" 
+                            fill="none" 
+                            viewBox="0 0 24 24" 
+                            stroke-width="1.5" 
+                            stroke="currentColor" 
+                            class="size-5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M16.862 4.487l1.687-1.687a2.25 2.25 0 113.182 3.182L10.582 17.13a4.5 4.5 0 01-1.897 1.13l-2.685.895.895-2.685a4.5 4.5 0 011.13-1.897L16.862 4.487z"/>
+                        </svg>
+                        Editar
+                    </button>` : "";
 
                 swiperHtml = `<div class="swiper-slide-content">
+
+                    ${editMomentButtonHtml}
+
                     <span
                         class="timeline-year">${formattedDateWithoutYear}</span>
                     <h4 class="timeline-title px-6" id="title${initial_index}">${titulo}</h4>
@@ -797,16 +817,34 @@ function addContainersAndSlides(dbDocs) {
                 let randomavatar2 = randInt(1, avatar2);
                 slideDiv.style.backgroundImage = `url(assets/img/back${random_number}.jpg)`;
 
+                let myOwn = MY_UID === momentOwnerUid;
+
                 const showLeft = left != null;
                 const showRight = right != null;
-                const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index, momentOwnerUid) : renderPlaceholderSide(momentOwnerName, randomavatar2, initial_index, MY_UID === momentOwnerUid, momentOwnerUid);
-                const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index, partnerUidTemp) : renderPlaceholderSide(partnerName, randomavatar1, initial_index, MY_UID === momentOwnerUid, partnerUidTemp);
+                const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index, momentOwnerUid) : renderPlaceholderSide(momentOwnerName, randomavatar2, initial_index, myOwn, momentOwnerUid);
+                const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index, partnerUidTemp) : renderPlaceholderSide(partnerName, randomavatar1, initial_index, myOwn, partnerUidTemp);
                 const showSong = song != null;
                 const songHtml = showSong ? renderSongHtml() : "";
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
                 const ratingHtml = renderRating(initial_index);
+                const editMomentButtonHtml = myOwn === true ? ` <button class="btn btn-ghost btn-xs top-0 left-0 absolute" data-id="${initial_index}" data-action="editMoment">
+                        <!-- icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" 
+                            fill="none" 
+                            viewBox="0 0 24 24" 
+                            stroke-width="1.5" 
+                            stroke="currentColor" 
+                            class="size-5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M16.862 4.487l1.687-1.687a2.25 2.25 0 113.182 3.182L10.582 17.13a4.5 4.5 0 01-1.897 1.13l-2.685.895.895-2.685a4.5 4.5 0 011.13-1.897L16.862 4.487z"/>
+                        </svg>
+                        Editar
+                    </button>` : "";
 
                 swiperHtml = `<div class="swiper-slide-content">
+
+                    ${editMomentButtonHtml}
+
                     <span
                         class="timeline-year">${formattedDateWithoutYear}</span>
                     <h4 class="timeline-title px-6" id="title${initial_index}">${titulo}</h4>
@@ -962,7 +1000,7 @@ async function initTimeLine() {
 
     console.log("Couple docs: ", coupleDocs.data());
 
-    
+
     PARTNER_UID = coupleDocs.data().members.find(m => m !== MY_UID);
     LEFT_NAME = coupleDocs.data().displayNames[MY_UID].toLowerCase();
     RIGHT_NAME = coupleDocs.data().displayNames[PARTNER_UID].toLowerCase();
@@ -1001,6 +1039,7 @@ async function initTimeLine() {
     listenerModal();
     listenerRegisterReviewBtn();
     setLogOutButton();
+    saveNewMomentLogic();
 }
 
 function watchAuthState() {
@@ -1132,3 +1171,398 @@ const feelingsWoman = [
     "Sorprendida 😲",
     "Melancólica 🥹"
 ];
+
+// Búsqueda Spotify dinámica
+function updateSpotifyLink() {
+    const spotifySearchBtn = document.getElementById("spotifySearchBtn");
+    const query = momentSong.value.trim();
+    const spotifyUrl = query
+        ? `https://open.spotify.com/search/${encodeURIComponent(query)}`
+        : "https://open.spotify.com/search";
+
+    spotifySearchBtn.href = spotifyUrl;
+}
+
+async function searchSpotifyTracks(query) {
+    const response = await fetch(`${SPOTIFY_SEARCH_URL}?q=${encodeURIComponent(query)}`);
+
+    if (!response.ok) {
+        throw new Error("Error buscando canciones en Spotify");
+    }
+
+    return await response.json();
+}
+
+function escapeHtml(text) {
+    return String(text ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function showSpotifyResults() {
+    const spotifyResults = document.getElementById("spotifyResults");
+    spotifyResults.classList.remove("hidden");
+}
+
+function hideSpotifyResults() {
+    const spotifyResults = document.getElementById("spotifyResults");
+    spotifyResults.classList.add("hidden");
+    spotifyResults.innerHTML = "";
+}
+
+function clearSpotifySelection() {
+    const momentSongId = document.getElementById("momentSongId");
+    const momentSongName = document.getElementById("momentSongName");
+    const momentSongArtist = document.getElementById("momentSongArtist");
+    const momentSongImage = document.getElementById("momentSongImage");
+    const momentSongUrl = document.getElementById("momentSongUrl");
+    const spotifySelected = document.getElementById("spotifySelected");
+    const spotifySelectedImage = document.getElementById("spotifySelectedImage");
+    const spotifySelectedName = document.getElementById("spotifySelectedName");
+    const spotifySelectedArtist = document.getElementById("spotifySelectedArtist");
+    const spotifySelectedUrl = document.getElementById("spotifySelectedUrl");
+    momentSongId.value = "";
+    momentSongName.value = "";
+    momentSongArtist.value = "";
+    momentSongImage.value = "";
+    momentSongUrl.value = "";
+
+    spotifySelectedImage.src = "";
+    spotifySelectedName.textContent = "";
+    spotifySelectedArtist.textContent = "";
+    spotifySelectedUrl.href = "#";
+
+    spotifySelected.classList.add("hidden");
+}
+
+function setSpotifySelection(track) {
+    const momentSongInput = document.getElementById("momentSong");
+    const momentSongId = document.getElementById("momentSongId");
+    const momentSongName = document.getElementById("momentSongName");
+    const momentSongArtist = document.getElementById("momentSongArtist");
+    const momentSongImage = document.getElementById("momentSongImage");
+    const momentSongUrl = document.getElementById("momentSongUrl");
+    const spotifySelected = document.getElementById("spotifySelected");
+    const spotifySelectedImage = document.getElementById("spotifySelectedImage");
+    const spotifySelectedName = document.getElementById("spotifySelectedName");
+    const spotifySelectedArtist = document.getElementById("spotifySelectedArtist");
+    const spotifySelectedUrl = document.getElementById("spotifySelectedUrl");
+    momentSongId.value = track.id ?? "";
+    momentSongName.value = track.name ?? "";
+    momentSongArtist.value = track.artist ?? "";
+    momentSongImage.value = track.image ?? "";
+    momentSongUrl.value = track.url ?? "";
+
+    momentSongInput.value = `${track.name} — ${track.artist}`;
+
+    spotifySelectedImage.src = track.image || "";
+    spotifySelectedName.textContent = track.name || "";
+    spotifySelectedArtist.textContent = track.artist || "";
+    spotifySelectedUrl.href = track.url || "#";
+
+    spotifySelected.classList.remove("hidden");
+    hideSpotifyResults();
+}
+
+function renderSpotifyResults(tracks) {
+
+    const spotifyResults = document.getElementById("spotifyResults");
+
+
+    if (!tracks || tracks.length === 0) {
+        spotifyResults.innerHTML = `
+            <div class="px-4 py-3 text-sm opacity-70">
+                No se encontraron resultados
+            </div>
+        `;
+        showSpotifyResults();
+        return;
+    }
+
+    spotifyResults.innerHTML = tracks.map((track, index) => `
+        <button
+            type="button"
+            class="spotify-result-item flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-base-200 ${index !== tracks.length - 1 ? "border-b border-base-200" : ""}"
+            data-id="${escapeHtml(track.id)}"
+            data-name="${escapeHtml(track.name)}"
+            data-artist="${escapeHtml(track.artist)}"
+            data-image="${escapeHtml(track.image || "")}"
+            data-url="${escapeHtml(track.url || "")}"
+        >
+            <img
+                src="${escapeHtml(track.image || "")}"
+                alt="${escapeHtml(track.name)}"
+                class="h-12 w-12 rounded-xl object-cover shrink-0"
+            />
+
+            <div class="min-w-0">
+                <p class="truncate font-medium">${escapeHtml(track.name)}</p>
+                <p class="truncate text-sm opacity-70">${escapeHtml(track.artist)}</p>
+            </div>
+        </button>
+    `).join("");
+
+    showSpotifyResults();
+}
+
+function getLocalDateTimeInputValue(date) {
+    const pad = (n) => String(n).padStart(2, "0");
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1);
+    const day = pad(date.getDate());
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+
+function logicRegisterIntimacy() {
+
+    let intimacy = 0;
+    const MAX_VISIBLE_HEARTS = 6;
+
+    const hearts = document.getElementById("intimacyHearts");
+    const count = document.getElementById("intimacyCount");
+    const hidden = document.getElementById("intimacyValue");
+    const plus = document.getElementById("intimacyPlus");
+    const minus = document.getElementById("intimacyMinus");
+
+    function renderQuantityIntimacy(popLast = false) {
+
+        hearts.innerHTML = "";
+
+        if (intimacy === 0) {
+            hearts.textContent = "💤";
+            count.textContent = "Sin intimidad";
+            hidden.value = 0;
+            return;
+        }
+
+        const visibleHearts = Math.min(intimacy, MAX_VISIBLE_HEARTS);
+
+        for (let i = 0; i < visibleHearts; i++) {
+
+            const heart = document.createElement("span");
+            heart.textContent = "❤️";
+
+            if (popLast && i === visibleHearts - 1) {
+                heart.classList.add("heart-pop");
+            }
+
+            hearts.appendChild(heart);
+        }
+
+        count.textContent = "x" + intimacy;
+        hidden.value = intimacy;
+    }
+
+    plus.onclick = () => {
+        intimacy++;
+        renderQuantityIntimacy(true);
+    };
+
+    minus.onclick = () => {
+        if (intimacy > 0) {
+            intimacy--;
+            renderQuantityIntimacy(false);
+        }
+    };
+
+    renderQuantityIntimacy();
+}
+
+function saveNewMomentLogic() {
+    const btnNewMoment = document.getElementById("btnNewMoment");
+    const btnChangeImage = document.getElementById("btnChangeImage");
+    const imageInput = document.getElementById("momentImageInput");
+    const momentModal = document.getElementById("momentModal");
+    const momentPreview = document.getElementById("momentPreview");
+    const momentImageSrc = document.getElementById("momentImageSrc");
+    const momentTimestamp = document.getElementById("momentTimestamp");
+    const momentSongId = document.getElementById("momentSongId");
+    const btnSaveMoment = document.getElementById("btnSaveMoment");
+    const momentForm = document.getElementById("momentForm");
+    const spotifyResults = document.getElementById("spotifyResults");
+    const momentSongInput = document.getElementById("momentSong");
+    const momentSongName = document.getElementById("momentSongName");
+    const momentSongArtist = document.getElementById("momentSongArtist");
+    const clearSpotifySelectionBtn = document.getElementById("clearSpotifySelection");
+
+
+    let spotifyDebounceTimer = null;
+    let spotifyLastQuery = "";
+    let spotifyRequestId = 0;
+
+    // Abrir selector al dar click en registrar
+    btnNewMoment.addEventListener("click", () => {
+        imageInput.click();
+    });
+
+    // Cambiar imagen desde el modal
+    btnChangeImage.addEventListener("click", () => {
+        imageInput.click();
+    });
+
+    // Al seleccionar imagen: preview + abrir modal
+    imageInput.addEventListener("change", (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            const imageSrc = e.target.result;
+
+            momentPreview.src = imageSrc;
+            momentImageSrc.value = imageSrc;
+
+            // si no hay fecha por defecto, ponemos ahora
+            if (!momentTimestamp.value) {
+                momentTimestamp.value = getLocalDateTimeInputValue(new Date());
+            }
+
+            momentModal.showModal();
+        };
+
+        reader.readAsDataURL(file);
+    });
+
+    momentSongInput.addEventListener("input", () => {
+        const query = momentSongInput.value.trim();
+
+        clearTimeout(spotifyDebounceTimer);
+
+        // Si empieza a escribir algo distinto, limpiamos selección previa
+        if (
+            query !== `${momentSongName.value} — ${momentSongArtist.value}` &&
+            momentSongId.value
+        ) {
+            clearSpotifySelection();
+        }
+
+        if (query.length < 2) {
+            hideSpotifyResults();
+            return;
+        }
+
+        spotifyDebounceTimer = setTimeout(async () => {
+            const currentRequestId = ++spotifyRequestId;
+            spotifyLastQuery = query;
+
+            try {
+                spotifyResults.innerHTML = `
+                <div class="px-4 py-3 text-sm opacity-70">
+                    Buscando...
+                </div>
+            `;
+                showSpotifyResults();
+
+                const tracks = await searchSpotifyTracks(query);
+
+                // Evita pintar resultados viejos si el usuario siguió escribiendo
+                if (currentRequestId !== spotifyRequestId) return;
+                if (momentSongInput.value.trim() !== spotifyLastQuery) return;
+
+                renderSpotifyResults(tracks);
+            } catch (error) {
+                console.error(error);
+
+                if (currentRequestId !== spotifyRequestId) return;
+
+                spotifyResults.innerHTML = `
+                <div class="px-4 py-3 text-sm text-error">
+                    Error buscando canciones
+                </div>
+            `;
+                showSpotifyResults();
+            }
+        }, 400); // debounce
+    });
+
+    /**
+     * Seleccionar canción desde dropdown
+     */
+    spotifyResults.addEventListener("click", (event) => {
+        const item = event.target.closest(".spotify-result-item");
+        if (!item) return;
+
+        const track = {
+            id: item.dataset.id,
+            name: item.dataset.name,
+            artist: item.dataset.artist,
+            image: item.dataset.image,
+            url: item.dataset.url
+        };
+
+        setSpotifySelection(track);
+    });
+
+    /**
+ * Botón quitar selección
+ */
+    clearSpotifySelectionBtn.addEventListener("click", () => {
+        clearSpotifySelection();
+        momentSongInput.value = "";
+        momentSongInput.focus();
+    });
+
+    /**
+ * Ocultar dropdown al clickear fuera
+ */
+    document.addEventListener("click", (event) => {
+        const clickedInsideSpotify =
+            event.target.closest("#momentSong") ||
+            event.target.closest("#spotifyResults") ||
+            event.target.closest("#spotifySelected");
+
+        if (!clickedInsideSpotify) {
+            hideSpotifyResults();
+        }
+    });
+
+    /**
+ * Mostrar dropdown otra vez al enfocar, si hay texto y no hay selección fija
+ */
+    momentSongInput.addEventListener("focus", () => {
+        const query = momentSongInput.value.trim();
+
+        if (query.length >= 2 && !momentSongId.value && spotifyResults.innerHTML.trim() !== "") {
+            showSpotifyResults();
+        }
+    });
+
+    // Guardar
+    btnSaveMoment.addEventListener("click", () => {
+        if (!momentForm.reportValidity()) return;
+
+        const ratingSelected = document.querySelector('input[name="rating"]:checked');
+
+        const payload = {
+            title: document.getElementById("momentTitle").value.trim(),
+            place: document.getElementById("momentPlace").value.trim(),
+            intimacyCount: Number(document.getElementById("momentIntimacyCount").value || 0),
+            song: document.getElementById("momentSong").value.trim(),
+            description: document.getElementById("momentDescription").value.trim(),
+            rating: ratingSelected ? Number(ratingSelected.value) : null,
+            feeling: document.getElementById("momentFeeling").value,
+            timestamp: document.getElementById("momentTimestamp").value,
+            imageSrc: document.getElementById("momentImageSrc").value
+        };
+
+        console.log("Payload del momento:", payload);
+
+        // Aquí luego harías:
+        // 1. subir imagen a Firebase Storage
+        // 2. obtener URL
+        // 3. guardar documento en Firestore con esa URL
+        // 4. cerrar modal / limpiar formulario
+
+        momentModal.close();
+    });
+
+    logicRegisterIntimacy();
+}

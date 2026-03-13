@@ -246,3 +246,23 @@
         stroke-dashoffset: -240.34889px;
     }
 }
+
+@keyframes heartPop {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+
+    60% {
+        transform: scale(1.3);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.heart-pop {
+    animation: heartPop 0.35s ease;
+}

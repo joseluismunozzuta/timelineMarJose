@@ -78,8 +78,11 @@
                 class="h-full flex items-stretch justify-center max-w-7xl gap-4 p-4 z-0 text-center text-neutral-content">
                 <div class="max-w-md flex flex-col justify-between my-3">
                     <div>
-                        <h1 class="pt-4 mb-5 font-bold text-white text-4xl">Nuestros recuerdos❤️</h1>
-                        <h2 class="pt-4 mb-5 font-bold text-white text-3xl italic">By: Mar & Jose</h2>
+                        <h1 class="pt-4 mb-3 font-bold text-white text-3xl">Nuestros recuerdos❤️</h1>
+                        <h2 class="pt-4 mb-3 font-bold text-white text-2xl italic">By: Mar & Jose</h2>
+                        <button id="btnNewMoment" class="btn btn-primary btn-sm my-2 shadow-lg shadow-gray-600">
+                            Registrar nuevo momento
+                        </button>
                     </div>
 
                     <div class="mb-4 gap-3 flex flex-col">
@@ -161,7 +164,8 @@
                         class="mask mask-star-2 mask-half-2 bg-orange-400" />
                 </div>
 
-                <button class="btn btn-primary btn-sm w-1/2 mx-auto my-3 hidden" id="editMoment" data-momentid="0">Editar</button>
+                <button class="btn btn-primary btn-sm w-1/2 mx-auto my-3 hidden" id="editMoment"
+                    data-momentid="0">Editar</button>
             </div>
 
         </div>
@@ -254,6 +258,231 @@
 
         <form method="dialog" class="modal-backdrop backdrop-blur-xs">
             <button>close</button>
+        </form>
+    </dialog>
+
+    <!-- Input file oculto -->
+    <input id="momentImageInput" type="file" accept="image/*" class="hidden" />
+
+    <!-- New Moment Modal -->
+    <dialog id="momentModal" class="modal">
+        <div class="modal-box mx-3 w-11/12 my-4 max-w-4xl p-0 overflow-y-scroll max-h-[90vh]">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-base-300 bg-base-200">
+                <div>
+                    <h3 class="text-xl text-center font-bold">Registrar momento</h3>
+                    <p class="text-sm opacity-70 hidden">Completa la información del momento seleccionado</p>
+                </div>
+
+                <form method="dialog">
+                    <button class="btn btn-sm btn-circle btn-ghost">✕</button>
+                </form>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6">
+                <form id="momentForm" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Columna izquierda: imagen -->
+                    <div class="space-y-4">
+                        <div class="rounded-3xl overflow-hidden border border-base-300 bg-base-200">
+                            <img id="momentPreview" src="" alt="Vista previa del momento"
+                                class="w-full h-95 object-cover" />
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button type="button" id="btnChangeImage" class="btn btn-outline btn-sm">
+                                Cambiar imagen
+                            </button>
+                        </div>
+
+                        <!-- Puedes guardar aquí el src temporal/base64/url -->
+                        <input type="hidden" id="momentImageSrc" name="imageSrc" />
+                    </div>
+
+                    <!-- Columna derecha: formulario -->
+                    <div class="space-y-4">
+                        <!-- Título -->
+                        <div class="form-control">
+
+                            <span class="label-text font-medium mb-10">Título</span>
+
+                            <input type="text" id="momentTitle" name="title" placeholder=""
+                                class="input input-bordered w-full" required />
+                        </div>
+
+                        <!-- Lugar -->
+                        <div class="form-control">
+
+                            <span class="label-text font-medium mb-2">Lugar</span>
+
+                            <input type="text" id="momentPlace" name="place" placeholder=""
+                                class="input input-bordered w-full" />
+                        </div>
+
+                        <!-- Intimidad -->
+
+                        <div class="form-control">
+
+                            <span class="label-text font-medium mb-2">Intimidad</span>
+
+                            <div class="flex justify-center items-center gap-4">
+
+                                <button id="intimacyMinus" type="button" class="btn btn-circle btn-outline">
+                                    -
+                                </button>
+
+                                <div class="text-center min-w-[90px]">
+                                    <div id="intimacyHearts" class="text-2xl flex justify-center gap-1"></div>
+                                    <div id="intimacyCount" class="text-sm opacity-70"></div>
+                                </div>
+
+                                <button id="intimacyPlus" type="button" class="btn btn-circle btn-primary">
+                                    +
+                                </button>
+
+                            </div>
+
+                            <input type="hidden" id="intimacyValue" value="0">
+                        </div>
+
+                        <!-- Spotify search -->
+                        <div class="form-control relative">
+
+                            <span class="label-text font-medium mb-2">Canción del momento</span>
+
+
+                            <input type="text" id="momentSong" placeholder="Busca una canción..."
+                                class="input input-bordered w-full" autocomplete="off" />
+
+                            <!-- Datos reales de la canción seleccionada -->
+                            <input type="hidden" id="momentSongId" />
+                            <input type="hidden" id="momentSongName" />
+                            <input type="hidden" id="momentSongArtist" />
+                            <input type="hidden" id="momentSongImage" />
+                            <input type="hidden" id="momentSongUrl" />
+
+                            <!-- Dropdown resultados -->
+                            <div id="spotifyResults"
+                                class="absolute left-0 right-0 top-full mt-2 z-[9999] hidden max-h-80 overflow-y-auto rounded-2xl border border-base-300 bg-base-100 shadow-xl">
+                            </div>
+
+                            <!-- Canción seleccionada -->
+                            <div id="spotifySelected"
+                                class="mt-3 hidden rounded-2xl border border-success/30 bg-success/10 p-3">
+                                <div class="flex items-center gap-3">
+                                    <img id="spotifySelectedImage" src="" alt="Cover"
+                                        class="h-14 w-14 rounded-xl object-cover" />
+
+                                    <div class="min-w-0 flex-1">
+                                        <p id="spotifySelectedName" class="truncate font-semibold"></p>
+                                        <p id="spotifySelectedArtist" class="truncate text-sm opacity-70"></p>
+                                    </div>
+
+                                    <div class="flex gap-2">
+                                        <a id="spotifySelectedUrl" href="#" target="_blank" rel="noopener noreferrer"
+                                            class="btn btn-success btn-sm">
+                                            Spotify
+                                        </a>
+
+                                        <button type="button" id="clearSpotifySelection" class="btn btn-ghost btn-sm">
+                                            Quitar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <span class="label-text-alt opacity-70 text-xs mt-1">
+                                Escribe al menos 2 caracteres para buscar en Spotify
+                            </span>
+
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="form-control">
+
+                            <span class="label-text font-medium mb-2">Descripción</span>
+
+                            <textarea id="momentDescription" name="description" rows="4"
+                                placeholder="Describe cómo fue el momento..." class="textarea textarea-bordered w-full"
+                                required></textarea>
+                        </div>
+
+                        <!-- Rating -->
+                        <div class="form-control">
+
+                            <span class="label-text font-medium">Tu rating</span>
+
+                            <div class="flex justify-center">
+                                <div class="rating rating-lg rating-half mx-auto">
+                                    <input type="radio" name="rating-newmoment" value="0" class="rating-hidden hidden"
+                                        checked />
+                                    <input type="radio" name="rating-newmoment" value="0.5"
+                                        class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                                    <input type="radio" name="rating-newmoment" value="1"
+                                        class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                                    <input type="radio" name="rating-newmoment" value="1.5"
+                                        class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                                    <input type="radio" name="rating-newmoment" value="2"
+                                        class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                                    <input type="radio" name="rating-newmoment" value="2.5"
+                                        class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                                    <input type="radio" name="rating-newmoment" value="3"
+                                        class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                                    <input type="radio" name="rating-newmoment" value="3.5"
+                                        class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                                    <input type="radio" name="rating-newmoment" value="4"
+                                        class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                                    <input type="radio" name="rating-newmoment" value="4.5"
+                                        class="mask mask-star-2 mask-half-1 bg-orange-400" />
+                                    <input type="radio" name="rating-newmoment" value="5"
+                                        class="mask mask-star-2 mask-half-2 bg-orange-400" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feeling -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">Emoción</span>
+                            </label>
+                            <select id="momentFeeling" name="feeling" class="select select-bordered w-full" required>
+                                <option value="" disabled selected>Selecciona una emoción</option>
+                                <option value="feliz">Feliz</option>
+                                <option value="enamorado">Enamorado</option>
+                                <option value="emocionado">Emocionado</option>
+                                <option value="agradecido">Agradecido</option>
+                                <option value="nostalgico">Nostálgico</option>
+                                <option value="tranquilo">Tranquilo</option>
+                                <option value="apasionado">Apasionado</option>
+                            </select>
+                        </div>
+
+                        <!-- Timestamp -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">Fecha y hora del momento</span>
+                            </label>
+                            <input type="datetime-local" id="momentTimestamp" name="timestamp"
+                                class="input input-bordered w-full" required />
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-base-300 bg-base-200 flex flex-col sm:flex-row justify-end gap-2">
+                <form method="dialog">
+                    <button class="btn btn-ghost">Cancelar</button>
+                </form>
+                <button id="btnSaveMoment" class="btn btn-primary">
+                    Guardar momento
+                </button>
+            </div>
+        </div>
+
+        <form method="dialog" class="modal-backdrop backdrop-blur-xs">
+            <button>Cerrar</button>
         </form>
     </dialog>
 
