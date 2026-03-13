@@ -267,7 +267,7 @@ function logicRegisterModal(element) {
     modal.showModal();
 }
 
-function mapMomentId(visualIndex){
+function mapMomentId(visualIndex) {
     return descriptionsGlobal.find(d => Number(d.visualIndex) === Number(visualIndex)).momentId;
 }
 
@@ -459,15 +459,15 @@ function fillFeelingSelect(genre, currentFeeling = null) {
 
 }
 
-function renderSongHtml() {
+function renderSongHtml(song, visualIndex) {
     return `<div class="tooltip" data-tip="Abrir en Spotify">
-                            <a class="btn btn-ghost btn-xs rounded-full" href="SPOTIFY_URL" target="_blank"
-                                rel="noreferrer">
-                                <span class="opacity-90">🎵</span>
-                                <span>Nuestra aflicción</span>
-                                <span class="opacity-60">— Pxndx</span>
-                            </a>
-                        </div>`;
+                <a class="btn btn-ghost btn-xs rounded-full" href="${song.url ?? null}" target="_blank"  id="spotifysongurl${visualIndex}"
+                    rel="noreferrer">
+                    <span class="opacity-90">🎵</span>
+                    <span id="spotifysongname${visualIndex}">${song.name ?? null}</span>
+                    <span class="opacity-60"  id="spotifysongartist${visualIndex}">—${song.artist ?? null}</span>
+                </a>
+            </div>`;
 }
 
 function renderIntimacy(initial_index, sex) {
@@ -625,6 +625,22 @@ function randInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function create3Dimage(url) {
+    return `<div class="hover-3d h-90 w-8/12 mx-8">
+                <figure class="max-w-100 h-full max-h-fit rounded-2xl">
+                    <img src="${url}" alt="3D card" />
+                </figure>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>`
+};
+
 function addContainersAndSlides(dbDocs) {
     let newConts = Math.ceil(dbDocs / 5);
     let initial_containerid = 1;
@@ -636,6 +652,7 @@ function addContainersAndSlides(dbDocs) {
     for (let j = 0; j < newConts; j++) {
         let slides = [];
         let timestamp;
+        let newMoment;
         let titulo;
         let sex = 0;
         let rating1 = 0;
@@ -685,6 +702,7 @@ function addContainersAndSlides(dbDocs) {
                 titulo = momentData.title;
                 sex = momentData.sex;
                 place = momentData.place;
+                newMoment = momentData.new ?? false;
                 song = momentData.song ?? null;
                 name1 = left?.name ?? null;
                 name1 = name1?.toLowerCase();
@@ -722,9 +740,10 @@ function addContainersAndSlides(dbDocs) {
                 const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index, momentOwnerUid) : renderPlaceholderSide(momentOwnerName, randomavatar2, initial_index, myOwn, momentOwnerUid);
                 const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index, partnerUidTemp) : renderPlaceholderSide(partnerName, randomavatar1, initial_index, myOwn, partnerUidTemp);
                 const showSong = song != null;
-                const songHtml = showSong ? renderSongHtml() : "";
+                const songHtml = showSong ? renderSongHtml(song, initial_index) : "";
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
                 const ratingHtml = renderRating(initial_index);
+                const imgHtml = newMoment === true ? create3Dimage(momentData.urlImg ?? null) : `<div class="mx-4 h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>`;
                 const editMomentButtonHtml = myOwn === true ? ` <button class="btn btn-ghost btn-xs top-0 left-0 absolute" data-id="${initial_index}" data-action="editMoment">
                         <!-- icon -->
                         <svg xmlns="http://www.w3.org/2000/svg" 
@@ -749,7 +768,7 @@ function addContainersAndSlides(dbDocs) {
                     <div class="flex my-2 items-center justify-center mx-auto">
                         ${ratingHtml}
                     </div>
-                    <div class="mx-4 h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>
+                    ${imgHtml}
                     <div class="mt-2 flex flex-wrap flex-col items-center justify-center gap-1">
                         <button class="btn btn-ghost btn-xs rounded-full">
                             <span class="opacity-70">📍</span>
@@ -799,6 +818,7 @@ function addContainersAndSlides(dbDocs) {
                 titulo = momentData.title;
                 sex = momentData.sex;
                 place = momentData.place;
+                newMoment = momentData.new ?? false;
                 song = momentData.song ?? null;
                 name1 = left?.name ?? null;
                 name1 = name1?.toLowerCase();
@@ -836,9 +856,10 @@ function addContainersAndSlides(dbDocs) {
                 const leftHtml = showLeft ? renderSide(name1, randomavatar1, feeling1, initial_index, momentOwnerUid) : renderPlaceholderSide(momentOwnerName, randomavatar2, initial_index, myOwn, momentOwnerUid);
                 const rightHtml = showRight ? renderSide(name2, randomavatar2, feeling2, initial_index, partnerUidTemp) : renderPlaceholderSide(partnerName, randomavatar1, initial_index, myOwn, partnerUidTemp);
                 const showSong = song != null;
-                const songHtml = showSong ? renderSongHtml() : "";
+                const songHtml = showSong ? renderSongHtml(song, initial_index) : "";
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
                 const ratingHtml = renderRating(initial_index);
+                const imgHtml = newMoment === true ? create3Dimage(momentData.urlImg ?? null) : `<div class="mx-4 h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>`;
                 const editMomentButtonHtml = myOwn === true ? ` <button class="btn btn-ghost btn-xs top-0 left-0 absolute" data-id="${initial_index}" data-action="editMoment">
                         <!-- icon -->
                         <svg xmlns="http://www.w3.org/2000/svg" 
@@ -863,7 +884,7 @@ function addContainersAndSlides(dbDocs) {
                     <div class="flex my-2 items-center justify-center mx-auto">
                         ${ratingHtml}
                     </div>
-                    <div class="mx-4 h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>
+                    ${imgHtml}
                     <div class="mt-2 flex flex-wrap flex-col items-center justify-center gap-1">
                         <button class="btn btn-ghost btn-xs rounded-full">
                             <span class="opacity-70">📍</span>
