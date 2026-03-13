@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { getFirestore, doc, collection, getDocs, getDoc, query, orderBy, documentId, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { getFirestore, doc, collection, runTransaction, getDocs, setDoc, Timestamp, getDoc, query, orderBy, documentId, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const SPOTIFY_SEARCH_URL = "https://us-central1-marlove-9b442.cloudfunctions.net/spotifySearch";
 
@@ -16,6 +17,7 @@ const firebaseConfig = {
 
 let auth = null;
 let db = null;
+let storage = null;
 let coupleId = null;
 let myName = null;
 let MY_UID = null;
@@ -194,6 +196,7 @@ function initializeFirestore() {
     const app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
+    storage = getStorage(app);
 }
 
 async function readCoupleId() {
@@ -668,6 +671,7 @@ function addContainersAndSlides(dbDocs) {
                 partnerName = momentOwnerUid === MY_UID ? RIGHT_NAME : LEFT_NAME;
 
                 const left = p[momentOwnerUid] ?? null;
+                console.log(left);
                 const right = p[partnerUidTemp] ?? null;
 
                 timestamp = momentData.timestamp;
@@ -690,8 +694,8 @@ function addContainersAndSlides(dbDocs) {
                     rating2 = rating1;
                 }
                 let ratingAverage = (rating1 + rating2) / 2;
-                feeling1 = left?.feeling1 ?? null;
-                feeling2 = right?.feeling2 ?? null;
+                feeling1 = left?.feeling ?? null;
+                feeling2 = right?.feeling ?? null;
                 //console.log(momentData);
 
                 let slideDiv = document.createElement("div");
@@ -715,6 +719,7 @@ function addContainersAndSlides(dbDocs) {
                 const showSong = song != null;
                 const songHtml = showSong ? renderSongHtml() : "";
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
+                const ratingHtml = renderRating(initial_index);
                 const editMomentButtonHtml = myOwn === true ? ` <button class="btn btn-ghost btn-xs top-0 left-0 absolute" data-id="${initial_index}" data-action="editMoment">
                         <!-- icon -->
                         <svg xmlns="http://www.w3.org/2000/svg" 
@@ -1172,142 +1177,6 @@ const feelingsWoman = [
     "Melancólica 🥹"
 ];
 
-// Búsqueda Spotify dinámica
-function updateSpotifyLink() {
-    const spotifySearchBtn = document.getElementById("spotifySearchBtn");
-    const query = momentSong.value.trim();
-    const spotifyUrl = query
-        ? `https://open.spotify.com/search/${encodeURIComponent(query)}`
-        : "https://open.spotify.com/search";
-
-    spotifySearchBtn.href = spotifyUrl;
-}
-
-async function searchSpotifyTracks(query) {
-    const response = await fetch(`${SPOTIFY_SEARCH_URL}?q=${encodeURIComponent(query)}`);
-
-    if (!response.ok) {
-        throw new Error("Error buscando canciones en Spotify");
-    }
-
-    return await response.json();
-}
-
-function escapeHtml(text) {
-    return String(text ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
-function showSpotifyResults() {
-    const spotifyResults = document.getElementById("spotifyResults");
-    spotifyResults.classList.remove("hidden");
-}
-
-function hideSpotifyResults() {
-    const spotifyResults = document.getElementById("spotifyResults");
-    spotifyResults.classList.add("hidden");
-    spotifyResults.innerHTML = "";
-}
-
-function clearSpotifySelection() {
-    const momentSongId = document.getElementById("momentSongId");
-    const momentSongName = document.getElementById("momentSongName");
-    const momentSongArtist = document.getElementById("momentSongArtist");
-    const momentSongImage = document.getElementById("momentSongImage");
-    const momentSongUrl = document.getElementById("momentSongUrl");
-    const spotifySelected = document.getElementById("spotifySelected");
-    const spotifySelectedImage = document.getElementById("spotifySelectedImage");
-    const spotifySelectedName = document.getElementById("spotifySelectedName");
-    const spotifySelectedArtist = document.getElementById("spotifySelectedArtist");
-    const spotifySelectedUrl = document.getElementById("spotifySelectedUrl");
-    momentSongId.value = "";
-    momentSongName.value = "";
-    momentSongArtist.value = "";
-    momentSongImage.value = "";
-    momentSongUrl.value = "";
-
-    spotifySelectedImage.src = "";
-    spotifySelectedName.textContent = "";
-    spotifySelectedArtist.textContent = "";
-    spotifySelectedUrl.href = "#";
-
-    spotifySelected.classList.add("hidden");
-}
-
-function setSpotifySelection(track) {
-    const momentSongInput = document.getElementById("momentSong");
-    const momentSongId = document.getElementById("momentSongId");
-    const momentSongName = document.getElementById("momentSongName");
-    const momentSongArtist = document.getElementById("momentSongArtist");
-    const momentSongImage = document.getElementById("momentSongImage");
-    const momentSongUrl = document.getElementById("momentSongUrl");
-    const spotifySelected = document.getElementById("spotifySelected");
-    const spotifySelectedImage = document.getElementById("spotifySelectedImage");
-    const spotifySelectedName = document.getElementById("spotifySelectedName");
-    const spotifySelectedArtist = document.getElementById("spotifySelectedArtist");
-    const spotifySelectedUrl = document.getElementById("spotifySelectedUrl");
-    momentSongId.value = track.id ?? "";
-    momentSongName.value = track.name ?? "";
-    momentSongArtist.value = track.artist ?? "";
-    momentSongImage.value = track.image ?? "";
-    momentSongUrl.value = track.url ?? "";
-
-    momentSongInput.value = `${track.name} — ${track.artist}`;
-
-    spotifySelectedImage.src = track.image || "";
-    spotifySelectedName.textContent = track.name || "";
-    spotifySelectedArtist.textContent = track.artist || "";
-    spotifySelectedUrl.href = track.url || "#";
-
-    spotifySelected.classList.remove("hidden");
-    hideSpotifyResults();
-}
-
-function renderSpotifyResults(tracks) {
-
-    const spotifyResults = document.getElementById("spotifyResults");
-
-
-    if (!tracks || tracks.length === 0) {
-        spotifyResults.innerHTML = `
-            <div class="px-4 py-3 text-sm opacity-70">
-                No se encontraron resultados
-            </div>
-        `;
-        showSpotifyResults();
-        return;
-    }
-
-    spotifyResults.innerHTML = tracks.map((track, index) => `
-        <button
-            type="button"
-            class="spotify-result-item flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-base-200 ${index !== tracks.length - 1 ? "border-b border-base-200" : ""}"
-            data-id="${escapeHtml(track.id)}"
-            data-name="${escapeHtml(track.name)}"
-            data-artist="${escapeHtml(track.artist)}"
-            data-image="${escapeHtml(track.image || "")}"
-            data-url="${escapeHtml(track.url || "")}"
-        >
-            <img
-                src="${escapeHtml(track.image || "")}"
-                alt="${escapeHtml(track.name)}"
-                class="h-12 w-12 rounded-xl object-cover shrink-0"
-            />
-
-            <div class="min-w-0">
-                <p class="truncate font-medium">${escapeHtml(track.name)}</p>
-                <p class="truncate text-sm opacity-70">${escapeHtml(track.artist)}</p>
-            </div>
-        </button>
-    `).join("");
-
-    showSpotifyResults();
-}
-
 function getLocalDateTimeInputValue(date) {
     const pad = (n) => String(n).padStart(2, "0");
     const year = date.getFullYear();
@@ -1384,18 +1253,36 @@ function saveNewMomentLogic() {
     const momentImageSrc = document.getElementById("momentImageSrc");
     const momentTimestamp = document.getElementById("momentTimestamp");
     const momentSongId = document.getElementById("momentSongId");
-    const btnSaveMoment = document.getElementById("btnSaveMoment");
     const momentForm = document.getElementById("momentForm");
     const spotifyResults = document.getElementById("spotifyResults");
     const momentSongInput = document.getElementById("momentSong");
     const momentSongName = document.getElementById("momentSongName");
     const momentSongArtist = document.getElementById("momentSongArtist");
+    const momentSongImage = document.getElementById("momentSongImage");
+    const momentSongUrl = document.getElementById("momentSongUrl");
+    const spotifySelected = document.getElementById("spotifySelected");
+    const spotifySelectedImage = document.getElementById("spotifySelectedImage");
+    const spotifySelectedName = document.getElementById("spotifySelectedName");
+    const spotifySelectedArtist = document.getElementById("spotifySelectedArtist");
+    const spotifySelectedUrl = document.getElementById("spotifySelectedUrl");
     const clearSpotifySelectionBtn = document.getElementById("clearSpotifySelection");
+    const btnSaveMoment = document.getElementById("btnSaveMoment");
 
+    const inputTitle = document.getElementById("momentTitle");
+    const inputDescription = document.getElementById("momentDescription");
+    const inputPlace = document.getElementById("momentPlace");
+    const inputFeeling = document.getElementById("momentFeeling");
+    const inputNoSong = document.getElementById("momentNoSong");
+    const ratingInputs = document.querySelectorAll('input[name="rating-newmoment"]');
+    const spotifySection = document.getElementById("spotifySection");
 
     let spotifyDebounceTimer = null;
     let spotifyLastQuery = "";
     let spotifyRequestId = 0;
+
+    let selectedMomentImageFile = null;
+
+    validateMomentForm();
 
     // Abrir selector al dar click en registrar
     btnNewMoment.addEventListener("click", () => {
@@ -1411,6 +1298,8 @@ function saveNewMomentLogic() {
     imageInput.addEventListener("change", (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
+
+        selectedMomentImageFile = file;
 
         const reader = new FileReader();
 
@@ -1430,6 +1319,110 @@ function saveNewMomentLogic() {
 
         reader.readAsDataURL(file);
     });
+
+    async function searchSpotifyTracks(query) {
+        const response = await fetch(`${SPOTIFY_SEARCH_URL}?q=${encodeURIComponent(query)}`);
+
+        if (!response.ok) {
+            throw new Error("Error buscando canciones en Spotify");
+        }
+
+        return await response.json();
+    }
+
+    function escapeHtml(text) {
+        return String(text ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function showSpotifyResults() {
+        spotifyResults.classList.remove("hidden");
+    }
+
+    function hideSpotifyResults() {
+        spotifyResults.classList.add("hidden");
+        spotifyResults.innerHTML = "";
+    }
+
+    function clearSpotifySelection() {
+        momentSongId.value = "";
+        momentSongName.value = "";
+        momentSongArtist.value = "";
+        momentSongImage.value = "";
+        momentSongUrl.value = "";
+
+        spotifySelectedImage.src = "";
+        spotifySelectedName.textContent = "";
+        spotifySelectedArtist.textContent = "";
+        spotifySelectedUrl.href = "#";
+
+        spotifySelected.classList.add("hidden");
+
+        validateMomentForm();
+    }
+
+    function setSpotifySelection(track) {
+
+        momentSongId.value = track.id ?? "";
+        momentSongName.value = track.name ?? "";
+        momentSongArtist.value = track.artist ?? "";
+        momentSongImage.value = track.image ?? "";
+        momentSongUrl.value = track.url ?? "";
+
+        momentSongInput.value = `${track.name} — ${track.artist}`;
+
+        spotifySelectedImage.src = track.image || "";
+        spotifySelectedName.textContent = track.name || "";
+        spotifySelectedArtist.textContent = track.artist || "";
+        spotifySelectedUrl.href = track.url || "#";
+
+        spotifySelected.classList.remove("hidden");
+        hideSpotifyResults();
+
+        validateMomentForm();
+    }
+
+    function renderSpotifyResults(tracks) {
+
+        if (!tracks || tracks.length === 0) {
+            spotifyResults.innerHTML = `
+            <div class="px-4 py-3 text-sm opacity-70">
+                No se encontraron resultados
+            </div>
+        `;
+            showSpotifyResults();
+            return;
+        }
+
+        spotifyResults.innerHTML = tracks.map((track, index) => `
+        <button
+            type="button"
+            class="spotify-result-item flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-base-200 ${index !== tracks.length - 1 ? "border-b border-base-200" : ""}"
+            data-id="${escapeHtml(track.id)}"
+            data-name="${escapeHtml(track.name)}"
+            data-artist="${escapeHtml(track.artist)}"
+            data-image="${escapeHtml(track.image || "")}"
+            data-url="${escapeHtml(track.url || "")}"
+        >
+            <img
+                src="${escapeHtml(track.image || "")}"
+                alt="${escapeHtml(track.name)}"
+                class="h-12 w-12 rounded-xl object-cover shrink-0"
+            />
+
+            <div class="min-w-0">
+                <p class="truncate font-medium">${escapeHtml(track.name)}</p>
+                <p class="truncate text-sm opacity-70">${escapeHtml(track.artist)}</p>
+            </div>
+        </button>
+    `).join("");
+
+        showSpotifyResults();
+    }
 
     momentSongInput.addEventListener("input", () => {
         const query = momentSongInput.value.trim();
@@ -1535,33 +1528,198 @@ function saveNewMomentLogic() {
         }
     });
 
-    // Guardar
-    btnSaveMoment.addEventListener("click", () => {
-        if (!momentForm.reportValidity()) return;
+    async function getNextMomentId(coupleId) {
+        const coupleRef = doc(db, "couples", coupleId);
 
-        const ratingSelected = document.querySelector('input[name="rating"]:checked');
+        const nextMomentId = await runTransaction(db, async (transaction) => {
+            const coupleSnap = await transaction.get(coupleRef);
 
-        const payload = {
-            title: document.getElementById("momentTitle").value.trim(),
-            place: document.getElementById("momentPlace").value.trim(),
-            intimacyCount: Number(document.getElementById("momentIntimacyCount").value || 0),
-            song: document.getElementById("momentSong").value.trim(),
-            description: document.getElementById("momentDescription").value.trim(),
-            rating: ratingSelected ? Number(ratingSelected.value) : null,
-            feeling: document.getElementById("momentFeeling").value,
-            timestamp: document.getElementById("momentTimestamp").value,
-            imageSrc: document.getElementById("momentImageSrc").value
+            if (!coupleSnap.exists()) {
+                throw new Error("No existe el documento del couple");
+            }
+
+            const currentLastIndex = coupleSnap.data().lastMomentIndex || 0;
+            const newIndex = currentLastIndex + 1;
+
+            transaction.update(coupleRef, {
+                lastMomentIndex: newIndex
+            });
+
+            return newIndex;
+        });
+
+        return nextMomentId;
+    }
+
+    async function uploadMomentImage(file, coupleId, momentId) {
+        const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+        const filePath = `moments/${coupleId}/moment_${momentId}.${extension}`;
+
+        const storageRef = ref(storage, filePath);
+
+        await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(storageRef);
+
+        return downloadURL;
+    }
+
+    async function createMoment(coupleId, payload) {
+        if (!selectedMomentImageFile) {
+            throw new Error("No hay imagen seleccionada");
+        }
+
+        const momentId = await getNextMomentId(coupleId);
+
+        const imageUrl = await uploadMomentImage(selectedMomentImageFile, coupleId, momentId);
+
+        const momentRef = doc(db, "couples", coupleId, "moments", String(momentId));
+        const momentDate = new Date(payload.timestamp);
+
+        const momentDoc = {
+            createdAt: serverTimestamp(),
+            createdBy: MY_UID,
+            momentId: momentId,
+            place: payload.place,
+            sex: payload.intimacyCount,
+            timestamp: Timestamp.fromDate(momentDate),
+            title: payload.title,
+            urlImg: imageUrl,
+            song: payload.song,
+            participants: {
+                [MY_UID]: {
+                    description: payload.description,
+                    feeling: payload.feeling,
+                    name: myName,
+                    rating: payload.rating,
+                    updatedAt: serverTimestamp()
+                }
+            }
         };
 
-        console.log("Payload del momento:", payload);
+        await setDoc(momentRef, momentDoc);
 
-        // Aquí luego harías:
-        // 1. subir imagen a Firebase Storage
-        // 2. obtener URL
-        // 3. guardar documento en Firestore con esa URL
-        // 4. cerrar modal / limpiar formulario
+        return { momentId, imageUrl };
+    }
 
-        momentModal.close();
+    // Guardar
+    btnSaveMoment.addEventListener("click", async () => {
+        if (!momentForm.reportValidity()) return;
+
+        try {
+
+            momentModal.close();
+            showLoader();
+
+            btnSaveMoment.disabled = true;
+
+            const ratingSelected = document.querySelector('input[name="rating-newmoment"]:checked');
+            const noSongChecked = inputNoSong.checked;
+
+
+            const selectedSong = noSongChecked
+                ? null
+                : {
+                    name: momentSongName.value.trim(),
+                    artist: momentSongArtist.value.trim(),
+                    url: momentSongUrl.value.trim()
+                };
+
+            const payload = {
+                title: document.getElementById("momentTitle").value.trim(),
+                place: document.getElementById("momentPlace").value.trim(),
+                intimacyCount: Number(document.getElementById("intimacyValue").value || 0),
+                song: selectedSong,
+                description: document.getElementById("momentDescription").value.trim(),
+                rating: ratingSelected ? Number(ratingSelected.value) : null,
+                feeling: document.getElementById("momentFeeling").value,
+                timestamp: document.getElementById("momentTimestamp").value,
+                imageSrc: document.getElementById("momentImageSrc").value
+            };
+
+            console.log("Payload del momento:", payload);
+
+            const result = await createMoment(coupleId, payload);
+
+            console.log("Momento guardado:", result);
+
+            hideLoader();
+        } catch (error) {
+            console.error("Error guardando momento:", error);
+            momentModal.showModal();
+            hideLoader();
+        } finally {
+            btnSaveMoment.disabled = false;
+        }
+    });
+
+    inputNoSong.addEventListener("change", () => {
+
+        if (inputNoSong.checked) {
+
+            spotifySection.classList.add("hidden");
+
+            // limpiar selección si existía
+            clearSpotifySelection?.();
+
+            const input = document.getElementById("momentSong");
+            if (input) input.value = "";
+
+        } else {
+
+            spotifySection.classList.remove("hidden");
+
+        }
+
+    });
+
+    momentSongInput.addEventListener("focus", () => {
+        inputNoSong.checked = false;
+        spotifySection.classList.remove("hidden");
+    });
+
+    function hasSelectedRating() {
+        return !!document.querySelector('input[name="rating-newmoment"]:checked');
+    }
+
+    function hasRequiredText(value) {
+        return value != null && value.trim() !== "";
+    }
+
+    function validateMomentForm() {
+        const hasTitle = hasRequiredText(inputTitle.value);
+        const hasDescription = hasRequiredText(inputDescription.value);
+        const hasPlace = hasRequiredText(inputPlace.value);
+        const hasFeeling = hasRequiredText(inputFeeling.value);
+        const hasTimestamp = hasRequiredText(momentTimestamp.value);
+        const hasRating = hasSelectedRating();
+
+        // Regla de canción:
+        // - si "no tiene canción" está activado => válido sin canción
+        // - si NO está activado => debe haber canción seleccionada
+        const songIsValid = inputNoSong.checked || hasRequiredText(momentSongId.value);
+
+        const formIsValid =
+            hasTitle &&
+            hasDescription &&
+            hasPlace &&
+            hasFeeling &&
+            hasTimestamp &&
+            hasRating &&
+            songIsValid;
+
+        btnSaveMoment.disabled = !formIsValid;
+
+        // opcional: feedback visual
+        btnSaveMoment.classList.toggle("btn-disabled", !formIsValid);
+    }
+
+    [inputTitle, inputDescription, inputPlace, inputFeeling, momentTimestamp, inputNoSong].forEach((element) => {
+        element.addEventListener("input", validateMomentForm);
+        element.addEventListener("change", validateMomentForm);
+    });
+
+    ratingInputs.forEach((radio) => {
+        radio.addEventListener("change", validateMomentForm);
     });
 
     logicRegisterIntimacy();
