@@ -214,7 +214,7 @@ async function readCoupleId() {
 
 const getFirebaseDocs = async (db) => {
     const coll = collection(db, "couples", coupleId, "moments");
-    const reading = await getDocs(query(coll, orderBy("momentId", "asc")));
+    const reading = await getDocs(query(coll, orderBy("timestamp", "asc")));
     return reading;
 }
 
@@ -225,7 +225,7 @@ const getCoupleDocs = async (db) => {
 }
 
 function logicViewModal(element) {
-    const id = Number(element.dataset.id);
+    const visualIndex = Number(element.dataset.visualindex);
     const user = element.dataset.user;
 
     let modal = document.getElementById("descriptionModal");
@@ -234,7 +234,7 @@ function logicViewModal(element) {
     let modalUserNameFeeling = document.getElementById("modalUserNameFeeling");
     let modalFeeling = document.getElementById("modalFeeling");
 
-    const descriptionData = descriptionsGlobal.find(d => d.momentId === id && d.descriptions[user] != null);
+    const descriptionData = descriptionsGlobal.find(d => d.visualIndex === visualIndex && d.descriptions[user] != null);
     if (descriptionData != null) {
         modalTitle.textContent = `${user}:`;
         modalDescription.textContent = descriptionData.descriptions[user];
@@ -247,7 +247,7 @@ function logicViewModal(element) {
 
     }
 
-    document.getElementById("editMoment")?.setAttribute("data-momentId", id);
+    document.getElementById("editMoment")?.setAttribute("data-visualindex", visualIndex);
     if (element.dataset.useruid === MY_UID) {
         document.getElementById("editMoment").classList.remove("hidden");
     } else {
@@ -259,12 +259,16 @@ function logicViewModal(element) {
 
 function logicRegisterModal(element) {
     var modal = document.getElementById("registerMomentModal");
-    const id = Number(element.dataset.id);
-    document.getElementById("registerMomentId").value = id;
+    const visualIndex = Number(element.dataset.visualindex);
+    document.getElementById("registerMomentId").value = visualIndex;
     fillFeelingSelect(GENRE);
     document.getElementById("registerModalActionText").textContent = "Escribir reseña";
     document.getElementById("saveRegisterMomentBtn").dataset.action = "add";
     modal.showModal();
+}
+
+function mapMomentId(visualIndex){
+    return descriptionsGlobal.find(d => Number(d.visualIndex) === Number(visualIndex)).momentId;
 }
 
 function listenerRegisterReviewBtn() {
@@ -276,7 +280,8 @@ function listenerRegisterReviewBtn() {
             modal.close();
             showLoader();
 
-            const momentId = document.getElementById("registerMomentId").value;
+            const visualIndex = document.getElementById("registerMomentId").value;
+            let momentId = mapMomentId(visualIndex);
 
             var action = document.getElementById("saveRegisterMomentBtn").dataset.action;
 
@@ -287,7 +292,7 @@ function listenerRegisterReviewBtn() {
                 await saveMomentParticipant(momentId);
             }
 
-            reRenderSlide(momentId, feelingTemp, ratingTemp);
+            reRenderSlide(visualIndex, feelingTemp, ratingTemp);
 
             hideLoader();
 
@@ -295,8 +300,8 @@ function listenerRegisterReviewBtn() {
 
     document.getElementById("editMoment").addEventListener("click", async () => {
         var modal = document.getElementById("registerMomentModal");
-        const id = Number(document.getElementById("editMoment").dataset.momentid);
-        document.getElementById("registerMomentId").value = id;
+        const visualIndex = Number(document.getElementById("editMoment").dataset.visualindex);
+        document.getElementById("registerMomentId").value = visualIndex;
         var currentDescription = document.getElementById("modalDescription").textContent;
         var currentFeeling = document.getElementById("modalFeeling").textContent;
         fillFeelingSelect(GENRE, currentFeeling);
@@ -309,18 +314,18 @@ function listenerRegisterReviewBtn() {
     });
 }
 
-function reRenderSlide(momentId, feeling, rating) {
-    var rightSideHtml = document.getElementById(`side${myName.toLowerCase()}${momentId}`);
+function reRenderSlide(visualIndex, feeling, rating) {
+    var rightSideHtml = document.getElementById(`side${myName.toLowerCase()}${visualIndex}`);
     if (rightSideHtml) {
-        rightSideHtml.outerHTML = renderSide(myName.toLowerCase(), randInt(1, 3), feeling, momentId, MY_UID);
+        rightSideHtml.outerHTML = renderSide(myName.toLowerCase(), randInt(1, 3), feeling, visualIndex, MY_UID);
     }
 
-    let currentRate = descriptionsGlobal.find(d => d.momentId === Number(momentId))?.ratings[RIGHT_NAME.toLowerCase()] ?? undefined;
+    let currentRate = descriptionsGlobal.find(d => d.visualIndex === Number(visualIndex))?.ratings[RIGHT_NAME.toLowerCase()] ?? undefined;
     let newRate = currentRate !== undefined ? (Number(currentRate) + Number(rating)) / 2 : rating;
 
-    setRating(momentId, newRate);
+    setRating(visualIndex, newRate);
     document.addEventListener("click", (e) => {
-        if (e.target && e.target.matches(`[data-action="viewComment"][data-id="${momentId}"]`)) {
+        if (e.target && e.target.matches(`[data-action="viewComment"][data-visualindex="${visualIndex}"]`)) {
             logicViewModal(e.target);
         }
     });
@@ -476,7 +481,7 @@ function renderIntimacy(initial_index, sex) {
 
 function renderSide(name, avatarRand, feeling, initial_index, sideUid) {
     return `
-    <div class="flex flex-col relative cursor-pointer" data-id="${initial_index}" data-feeling="${feeling}" data-user="${name}" data-action="viewComment" data-useruid="${sideUid}" id="side${name}${initial_index}">
+    <div class="flex flex-col relative cursor-pointer" data-visualindex="${initial_index}" data-feeling="${feeling}" data-user="${name}" data-action="viewComment" data-useruid="${sideUid}" id="side${name}${initial_index}">
         <div class="avatar mx-auto transition-transform duration-300 hover:scale-110">
             <div class="ring-secondary ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
                 <img id="avatar${name}${initial_index}" src="assets/img/avatars/${name}${avatarRand}.jpg" />
@@ -495,7 +500,7 @@ function renderPlaceholderSide(name, avatarRand, initial_index, myown, sideUid) 
 
         return `
             <div class="group flex flex-col relative cursor-pointer opacity-80 hover:opacity-100"
-                data-id="${initial_index}" data-user="${name}" data-action="noComment" data-useruid="${sideUid}" id="side${name}${initial_index}">
+                data-visualindex="${initial_index}" data-user="${name}" data-action="noComment" data-useruid="${sideUid}" id="side${name}${initial_index}">
                 
                 <div class="avatar mx-auto transition-transform duration-300 group-hover:scale-105">
                 <div class="ring-base-300 ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
@@ -517,7 +522,7 @@ function renderPlaceholderSide(name, avatarRand, initial_index, myown, sideUid) 
 
         return `
             <div class="group flex flex-col relative cursor-pointer opacity-80 hover:opacity-100"
-                data-id="${initial_index}" data-user="${name}" data-action="addComment" data-useruid="${sideUid}" id="side${name}${initial_index}">
+                data-visualindex="${initial_index}" data-user="${name}" data-action="addComment" data-useruid="${sideUid}" id="side${name}${initial_index}">
                 
                 <div class="avatar mx-auto transition-transform duration-300 group-hover:scale-105">
                 <div class="ring-base-300 ring-offset-base-100 w-24 rounded-full ring-2 ring-offset-2">
@@ -555,9 +560,9 @@ function renderRating(initial_index) {
             </div>`;
 }
 
-function setRating(id, value) {
+function setRating(visualIndex, value) {
     const v = String(value);
-    const target = document.querySelector(`input[name="rating-${id}"][value="${v}"]`);
+    const target = document.querySelector(`input[name="rating-${visualIndex}"][value="${v}"]`);
     if (target) target.checked = true;
 }
 
@@ -764,7 +769,9 @@ function addContainersAndSlides(dbDocs) {
                 setRating(initial_index, ratingAverage);
 
                 descriptionsGlobal.push({
-                    momentId: momentData.momentId, descriptions: { [name1]: left?.description ?? null, [name2]: right?.description ?? null },
+                    visualIndex: initial_index,
+                    momentId: momentData.momentId,
+                    descriptions: { [name1]: left?.description ?? null, [name2]: right?.description ?? null },
                     ratings: { [name1]: left?.rating ?? null, [name2]: right?.rating ?? null }
                 });
 
@@ -876,6 +883,7 @@ function addContainersAndSlides(dbDocs) {
                 var ind = { index: initial_index };
                 setRating(initial_index, ratingAverage);
                 descriptionsGlobal.push({
+                    visualIndex: initial_index,
                     momentId: momentData.momentId, descriptions: { [name1]: left?.description ?? null, [name2]: right?.description ?? null },
                     ratings: { [name1]: left?.rating ?? null, [name2]: right?.rating ?? null }
                 });
@@ -974,11 +982,9 @@ function firstMomentLogic() {
 
 function listenerModal() {
     document.addEventListener("click", function (event) {
-        const element = event.target.closest("[data-id][data-user][data-action]:not([data-action='noComment'])");
+        const element = event.target.closest("[data-visualindex][data-user][data-action]:not([data-action='noComment'])");
         if (!element) return;
 
-        const id = element.dataset.id;
-        const user = element.dataset.user;
         const action = element.dataset.action;
 
         if (action === "viewComment") {
@@ -1016,6 +1022,9 @@ async function initTimeLine() {
 
     //Convert to array
     const dataArray = collectionDocs.docs.map(doc => doc.data());
+    dataArray.forEach((moment, i) => {
+        moment.visualIndex = i + 1;
+    });
     for (let i = 0; i < dataArray.length; i += 5) {
         elements.push(dataArray.slice(i, i + 5));
     }
@@ -1024,12 +1033,10 @@ async function initTimeLine() {
 
     data = elements.map((group, idx) => ({
         id: idx + 1,
-        slides: group
-            // por si acaso alguno viniera sin momentId (no debería), lo filtramos
-            .filter(d => d?.momentId != null)
-            // y lo convertimos al formato { index: momentId }
-            .map(d => ({ index: d.momentId }))
+        slides: group.filter(d => d?.visualIndex != null).map(d => ({ index: d.visualIndex }))
     }));
+
+    console.log("Data: ", data);
 
     addContainersAndSlides(dbDocs);
 
@@ -1585,6 +1592,7 @@ function saveNewMomentLogic() {
             title: payload.title,
             urlImg: imageUrl,
             song: payload.song,
+            new: payload.new,
             participants: {
                 [MY_UID]: {
                     description: payload.description,
@@ -1633,7 +1641,8 @@ function saveNewMomentLogic() {
                 rating: ratingSelected ? Number(ratingSelected.value) : null,
                 feeling: document.getElementById("momentFeeling").value,
                 timestamp: document.getElementById("momentTimestamp").value,
-                imageSrc: document.getElementById("momentImageSrc").value
+                imageSrc: document.getElementById("momentImageSrc").value,
+                new: true
             };
 
             console.log("Payload del momento:", payload);
