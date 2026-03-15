@@ -27,6 +27,9 @@ let RIGHT_NAME = null;
 let GENRE = null;
 let feelingTemp = null;
 let ratingTemp = 0;
+let intimacyState = 0;
+let momentModalMode = "create"; // "create" | "edit"
+let editingMomentId = null;
 
 let descriptionsGlobal = [];
 let data = [];
@@ -745,8 +748,15 @@ function addContainersAndSlides(dbDocs) {
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
                 const ratingHtml = renderRating(initial_index);
                 const imgHtml = newMoment === true ? create3Dimage(momentData.urlImg ?? null) : `<div class="mx-4 h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>`;
+                const isoTimestamp = timestamp?.toDate().toISOString().slice(0, 16) ?? "";
                 const editMomentButtonHtml = myOwn === true ? ` <button class="btn btn-ghost btn-xs top-0 left-0 absolute" data-id="${initial_index}" data-action="editMoment"
-                data-title="${titulo}" data-place="${place}" data-sex="${sex}" data-timestamp="${timestamp}" data-songname="${song?.name ?? null}" data-songartist="${song?.artist ?? null}" data-songurl="${song?.url ?? null}">
+                        data-title="${escapeHtml(titulo)}"
+                        data-place="${escapeHtml(place)}"
+                        data-sex="${sex ?? 0}"
+                        data-timestamp="${isoTimestamp}"
+                        data-songname=${escapeHtml(song?.name ?? "")}
+                        data-songartist=${escapeHtml(song?.artist ?? "")}
+                        data-songurl=${song?.url ?? ""}>
                         <!-- icon -->
                         <svg xmlns="http://www.w3.org/2000/svg" 
                             fill="none" 
@@ -862,8 +872,15 @@ function addContainersAndSlides(dbDocs) {
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
                 const ratingHtml = renderRating(initial_index);
                 const imgHtml = newMoment === true ? create3Dimage(momentData.urlImg ?? null) : `<div class="mx-4 h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>`;
-                const editMomentButtonHtml = myOwn === true ? ` <button class="btn btn-ghost btn-xs top-0 left-0 absolute" data-id="${initial_index}" data-action="editMoment"
-                data-title="${titulo}" data-place="${place}" data-sex="${sex}" data-timestamp="${timestamp}" data-songname="${song?.name ?? null}" data-songartist="${song?.artist ?? null}" data-songurl="${song?.url ?? null}">
+                const isoTimestamp = timestamp?.toDate().toISOString().slice(0, 16) ?? "";
+                const editMomentButtonHtml = myOwn === true ? ` <button class="z-1000 btn btn-ghost btn-xs top-0 left-0 absolute" data-id="${initial_index}" data-action="editMoment"
+                                    data-title="${escapeHtml(titulo)}"
+                        data-place="${escapeHtml(place)}"
+                        data-sex="${sex ?? 0}"
+                        data-timestamp="${isoTimestamp}"
+                        data-songname=${escapeHtml(song?.name ?? "")}
+                        data-songartist=${escapeHtml(song?.artist ?? "")}
+                        data-songurl=${song?.url ?? ""}>
                         <!-- icon -->
                         <svg xmlns="http://www.w3.org/2000/svg" 
                             fill="none" 
@@ -1287,7 +1304,24 @@ function logicRegisterIntimacy() {
         }
     };
 
+    window.renderQuantityIntimacy = renderQuantityIntimacy;
     renderQuantityIntimacy();
+}
+
+function setIntimacyValue(value) {
+    intimacyState = Number(value || 0);
+    if (typeof window.renderQuantityIntimacy === "function") {
+        window.renderQuantityIntimacy(false);
+    }
+}
+
+function escapeHtml(text) {
+    return String(text ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 }
 
 function saveNewMomentLogic() {
@@ -1295,6 +1329,11 @@ function saveNewMomentLogic() {
     const btnChangeImage = document.getElementById("btnChangeImage");
     const imageInput = document.getElementById("momentImageInput");
     const momentModal = document.getElementById("momentModal");
+    const modalTitle = document.getElementById("momentModalTitle");
+    const imageSection = document.getElementById("momentImageSection");
+    const descriptionSection = document.getElementById("momentDescriptionSection");
+    const ratingSection = document.getElementById("momentRatingSection");
+    const feelingSection = document.getElementById("momentFeelingSection");
     const momentPreview = document.getElementById("momentPreview");
     const momentImageSrc = document.getElementById("momentImageSrc");
     const momentTimestamp = document.getElementById("momentTimestamp");
@@ -1330,6 +1369,135 @@ function saveNewMomentLogic() {
 
     validateMomentForm();
 
+    function configureMomentModalForCreate() {
+        momentModalMode = "create";
+        editingMomentId = null;
+
+        modalTitle.textContent = "Registrar momento";
+        btnSaveMoment.textContent = "Guardar momento";
+
+        imageSection.classList.remove("hidden");
+        descriptionSection.classList.remove("hidden");
+        ratingSection.classList.remove("hidden");
+        feelingSection.classList.remove("hidden");
+
+        clearMomentModalForm();
+        validateMomentForm();
+    }
+
+    function configureMomentModalForEdit() {
+        momentModalMode = "edit";
+
+        modalTitle.textContent = "Editar momento";
+        btnSaveMoment.textContent = "Guardar cambios";
+
+        imageSection.classList.add("hidden");
+        descriptionSection.classList.add("hidden");
+        ratingSection.classList.add("hidden");
+        feelingSection.classList.add("hidden");
+    }
+
+    function clearMomentModalForm() {
+        inputTitle.value = "";
+        inputPlace.value = "";
+        momentTimestamp.value = "";
+
+        setIntimacyValue(0);
+
+        inputNoSong.checked = false;
+        spotifySection.classList.remove("hidden");
+
+        clearSpotifySelection();
+        momentSongInput.value = "";
+
+        const description = document.getElementById("momentDescription");
+        const feeling = document.getElementById("momentFeeling");
+
+        if (description) description.value = "";
+        if (feeling) feeling.value = "";
+
+        document.querySelectorAll('input[name="rating-newmoment"]').forEach(r => {
+            r.checked = false;
+        });
+
+        const previewImage = document.getElementById("momentPreview");
+        const imageSrc = document.getElementById("momentImageSrc");
+
+        if (previewImage) previewImage.src = "";
+        if (imageSrc) imageSrc.value = "";
+    }
+
+    function openEditMomentModal(button) {
+        configureMomentModalForEdit();
+
+        editingMomentId = button.dataset.id;
+
+        const title = button.dataset.title;
+        const place = button.dataset.place;
+        const sex = Number(button.dataset.sex || 0);
+        const timestamp = button.dataset.timestamp;
+
+        const songName = button.dataset.songname;
+        const songArtist = button.dataset.songartist;
+        const songUrl = button.dataset.songurl;
+
+        inputTitle.value = title;
+        inputPlace.value = place;
+        momentTimestamp.value = timestamp;
+
+        setIntimacyValue(sex);
+
+        const hasSong = songName !== "" && songArtist !== "" && songUrl !== "";
+
+        if (hasSong) {
+            inputNoSong.checked = false;
+            spotifySection.classList.remove("hidden");
+
+            momentSongId.value = "existing-song";
+            momentSongName.value = songName;
+            momentSongArtist.value = songArtist;
+            momentSongUrl.value = songUrl;
+            momentSongImage.value = "";
+
+            momentSongInput.value = `${songName} — ${songArtist}`;
+
+            const spotifySelected = document.getElementById("spotifySelected");
+            const spotifySelectedImage = document.getElementById("spotifySelectedImage");
+            const spotifySelectedName = document.getElementById("spotifySelectedName");
+            const spotifySelectedArtist = document.getElementById("spotifySelectedArtist");
+            const spotifySelectedUrl = document.getElementById("spotifySelectedUrl");
+
+            spotifySelectedName.textContent = songName;
+            spotifySelectedArtist.textContent = songArtist;
+            spotifySelectedUrl.href = songUrl;
+
+            if (spotifySelectedImage) {
+                spotifySelectedImage.classList.add("hidden");
+                spotifySelectedImage.src = "";
+            }
+
+            spotifySelected.classList.remove("hidden");
+        } else {
+            inputNoSong.checked = true;
+            spotifySection.classList.add("hidden");
+            clearSpotifySelection();
+            momentSongInput.value = "";
+        }
+
+        validateMomentForm();
+        momentModal.showModal();
+    }
+
+    //Editar momento
+    document.addEventListener("click", (event) => {
+        const editBtn = event.target.closest('[data-action="editMoment"]');
+        if (!editBtn) return;
+
+        console.log("edit button clicked");
+
+        openEditMomentModal(editBtn);
+    });
+
     // Abrir selector al dar click en registrar
     btnNewMoment.addEventListener("click", () => {
         imageInput.click();
@@ -1350,6 +1518,9 @@ function saveNewMomentLogic() {
         const reader = new FileReader();
 
         reader.onload = function (e) {
+
+            configureMomentModalForCreate();
+
             const imageSrc = e.target.result;
 
             momentPreview.src = imageSrc;
@@ -1374,15 +1545,6 @@ function saveNewMomentLogic() {
         }
 
         return await response.json();
-    }
-
-    function escapeHtml(text) {
-        return String(text ?? "")
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
     }
 
     function showSpotifyResults() {
@@ -1648,9 +1810,43 @@ function saveNewMomentLogic() {
         return { momentId, imageUrl };
     }
 
+    async function editMoment(coupleId, momentId, payload) {
+        if (!momentId) {
+            throw new Error("No se recibió el momentId a editar");
+        }
+
+        const momentRef = doc(db, "couples", coupleId, "moments", String(momentId));
+        const momentDate = new Date(payload.timestamp);
+
+        const hasValidSong =
+            payload.song &&
+            payload.song.name?.trim() &&
+            payload.song.artist?.trim() &&
+            payload.song.url?.trim();
+
+        const momentDocUpdate = {
+            title: payload.title,
+            place: payload.place,
+            sex: payload.intimacyCount,
+            timestamp: Timestamp.fromDate(momentDate),
+            song: hasValidSong
+                ? {
+                    name: payload.song.name.trim(),
+                    artist: payload.song.artist.trim(),
+                    url: payload.song.url.trim()
+                }
+                : null
+        };
+
+        await updateDoc(momentRef, momentDocUpdate);
+
+        return { momentId };
+    }
+
     // Guardar
     btnSaveMoment.addEventListener("click", async () => {
-        if (!momentForm.reportValidity()) return;
+
+        if (btnSaveMoment.disabled) return;
 
         try {
 
@@ -1659,46 +1855,95 @@ function saveNewMomentLogic() {
 
             btnSaveMoment.disabled = true;
 
-            const ratingSelected = document.querySelector('input[name="rating-newmoment"]:checked');
-            const noSongChecked = inputNoSong.checked;
+            if (momentModalMode === "create") {
+                if (!momentForm.reportValidity()) return;
+                await handleCreateMoment();
+            }
 
+            if (momentModalMode === "edit") {
+                await handleEditMoment();
+            }
 
-            const selectedSong = noSongChecked
-                ? null
-                : {
-                    name: momentSongName.value.trim(),
-                    artist: momentSongArtist.value.trim(),
-                    url: momentSongUrl.value.trim()
-                };
-
-            const payload = {
-                title: document.getElementById("momentTitle").value.trim(),
-                place: document.getElementById("momentPlace").value.trim(),
-                intimacyCount: Number(document.getElementById("intimacyValue").value || 0),
-                song: selectedSong,
-                description: document.getElementById("momentDescription").value.trim(),
-                rating: ratingSelected ? Number(ratingSelected.value) : null,
-                feeling: document.getElementById("momentFeeling").value,
-                timestamp: document.getElementById("momentTimestamp").value,
-                imageSrc: document.getElementById("momentImageSrc").value,
-                new: true
-            };
-
-            console.log("Payload del momento:", payload);
-
-            const result = await createMoment(coupleId, payload);
-
-            console.log("Momento guardado:", result);
-
-            hideLoader();
         } catch (error) {
             console.error("Error guardando momento:", error);
             momentModal.showModal();
             hideLoader();
         } finally {
             btnSaveMoment.disabled = false;
+            validateMomentForm();
         }
     });
+
+    async function handleEditMoment() {
+
+        const ratingSelected = document.querySelector('input[name="rating-newmoment"]:checked');
+        const noSongChecked = inputNoSong.checked;
+
+
+        const selectedSong = noSongChecked
+            ? null
+            : {
+                name: momentSongName.value.trim(),
+                artist: momentSongArtist.value.trim(),
+                url: momentSongUrl.value.trim()
+            };
+
+        const payload = {
+            title: document.getElementById("momentTitle").value.trim(),
+            place: document.getElementById("momentPlace").value.trim(),
+            intimacyCount: Number(document.getElementById("intimacyValue").value || 0),
+            song: selectedSong,
+            timestamp: document.getElementById("momentTimestamp").value
+        };
+
+        console.log("Edit: Payload del momento:", payload);
+
+        var momentId = mapMomentId(editingMomentId);
+
+        const result = await editMoment(coupleId, momentId, payload);
+
+        console.log("Momento editado:", result);
+
+        hideLoader();
+
+    }
+
+    async function handleCreateMoment() {
+
+        const ratingSelected = document.querySelector('input[name="rating-newmoment"]:checked');
+        const noSongChecked = inputNoSong.checked;
+
+
+        const selectedSong = noSongChecked
+            ? null
+            : {
+                name: momentSongName.value.trim(),
+                artist: momentSongArtist.value.trim(),
+                url: momentSongUrl.value.trim()
+            };
+
+        const payload = {
+            title: document.getElementById("momentTitle").value.trim(),
+            place: document.getElementById("momentPlace").value.trim(),
+            intimacyCount: Number(document.getElementById("intimacyValue").value || 0),
+            song: selectedSong,
+            description: document.getElementById("momentDescription").value.trim(),
+            rating: ratingSelected ? Number(ratingSelected.value) : null,
+            feeling: document.getElementById("momentFeeling").value,
+            timestamp: document.getElementById("momentTimestamp").value,
+            imageSrc: document.getElementById("momentImageSrc").value,
+            new: true
+        };
+
+        console.log("Payload del momento:", payload);
+
+        const result = await createMoment(coupleId, payload);
+
+        console.log("Momento guardado:", result);
+
+        hideLoader();
+
+    }
 
     inputNoSong.addEventListener("change", () => {
 
@@ -1746,14 +1991,32 @@ function saveNewMomentLogic() {
         // - si NO está activado => debe haber canción seleccionada
         const songIsValid = inputNoSong.checked || hasRequiredText(momentSongId.value);
 
-        const formIsValid =
-            hasTitle &&
-            hasDescription &&
-            hasPlace &&
-            hasFeeling &&
-            hasTimestamp &&
-            hasRating &&
-            songIsValid;
+        let formIsValid = false;
+
+        if (momentModalMode === "create") {
+            const inputDescription = document.getElementById("momentDescription");
+            const inputFeeling = document.getElementById("momentFeeling");
+            const hasDescription = inputDescription.value.trim() !== "";
+            const hasFeeling = inputFeeling.value.trim() !== "";
+            const hasRating = !!document.querySelector('input[name="rating-newmoment"]:checked');
+
+            formIsValid =
+                hasTitle &&
+                hasPlace &&
+                hasTimestamp &&
+                hasDescription &&
+                hasFeeling &&
+                hasRating &&
+                songIsValid;
+        }
+
+        if (momentModalMode === "edit") {
+            formIsValid =
+                hasTitle &&
+                hasPlace &&
+                hasTimestamp &&
+                songIsValid;
+        }
 
         btnSaveMoment.disabled = !formIsValid;
 
