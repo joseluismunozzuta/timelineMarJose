@@ -12,7 +12,7 @@ def find_image_paths(root_dir):
     image_paths = []
     for folder, _, files in os.walk(root_dir):
         for file in files:
-            if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.bmp')):
+            if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp')):
                 image_path = os.path.join(folder, file)
                 image_paths.append(image_path)
     return image_paths

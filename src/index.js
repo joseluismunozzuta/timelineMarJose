@@ -173,7 +173,7 @@ function buildFirstPagination() {
 function setAllCarouselItems() {
 
     let carouselItemHtml1 = `<div
-    class="carousel-item h-full max-h-fit flex justify-center ">
+    class="carousel-item h-full flex justify-center ">
     <img
         src=`;
     let carouselItemHtml2 = `>
@@ -181,8 +181,9 @@ function setAllCarouselItems() {
 
     const finalArray = [];
 
-    for (let i = 1; i <= 15; i++) {
+    for (let i = 1; i <= 21; i++) {
         let carousel = document.getElementById("carousel" + i);
+        console.log("carousel", i);
         const subArray = imagesUrls.filter(url => url.includes(`/img/${i - 1}/`));
         finalArray.push(subArray);
         for (var j = 0; j < finalArray[i - 1].length; j++) {
@@ -744,7 +745,8 @@ function addContainersAndSlides(dbDocs) {
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
                 const ratingHtml = renderRating(initial_index);
                 const imgHtml = newMoment === true ? create3Dimage(momentData.urlImg ?? null) : `<div class="mx-4 h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>`;
-                const editMomentButtonHtml = myOwn === true ? ` <button class="btn btn-ghost btn-xs top-0 left-0 absolute" data-id="${initial_index}" data-action="editMoment">
+                const editMomentButtonHtml = myOwn === true ? ` <button class="btn btn-ghost btn-xs top-0 left-0 absolute" data-id="${initial_index}" data-action="editMoment"
+                data-title="${titulo}" data-place="${place}" data-sex="${sex}" data-timestamp="${timestamp}" data-songname="${song?.name ?? null}" data-songartist="${song?.artist ?? null}" data-songurl="${song?.url ?? null}">
                         <!-- icon -->
                         <svg xmlns="http://www.w3.org/2000/svg" 
                             fill="none" 
@@ -860,7 +862,8 @@ function addContainersAndSlides(dbDocs) {
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
                 const ratingHtml = renderRating(initial_index);
                 const imgHtml = newMoment === true ? create3Dimage(momentData.urlImg ?? null) : `<div class="mx-4 h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>`;
-                const editMomentButtonHtml = myOwn === true ? ` <button class="btn btn-ghost btn-xs top-0 left-0 absolute" data-id="${initial_index}" data-action="editMoment">
+                const editMomentButtonHtml = myOwn === true ? ` <button class="btn btn-ghost btn-xs top-0 left-0 absolute" data-id="${initial_index}" data-action="editMoment"
+                data-title="${titulo}" data-place="${place}" data-sex="${sex}" data-timestamp="${timestamp}" data-songname="${song?.name ?? null}" data-songartist="${song?.artist ?? null}" data-songurl="${song?.url ?? null}">
                         <!-- icon -->
                         <svg xmlns="http://www.w3.org/2000/svg" 
                             fill="none" 
@@ -1165,9 +1168,24 @@ const imagesUrls = [
     "assets/img/12/IMG_9265.jpg",
     "assets/img/13/IMG_9355.jpg",
     "assets/img/14/20260221_031519.jpg",
+    "assets/img/15/20260222.webp",
     "assets/img/15/20260222_171437.jpg",
+    "assets/img/15/20260222_17230.gif",
+    "assets/img/16/100IMG_9508.gif",
+    "assets/img/16/1120260224_203551.jpg",
+    "assets/img/16/12IMG_9497.webp",
+    "assets/img/17/IMG_9639.webp",
+    "assets/img/18/IMG_9655.webp",
+    "assets/img/19/10IMG_9741.gif",
+    "assets/img/19/158ca60ba-0361-14008.jpg",
+    "assets/img/19/20260303_2116.jpg",
     "assets/img/2/20260122_224946.jpg",
     "assets/img/2/IMG_8480.jpg",
+    "assets/img/20/20260307_214814.webp",
+    "assets/img/20/IMG_9835.webp",
+    "assets/img/21/20260310_22400.webp",
+    "assets/img/22/1IMG-20260314-WA0001.webp",
+    "assets/img/22/IMG_9967.webp",
     "assets/img/3/20260124_183549.jpg",
     "assets/img/3/20260125_002820.jpg",
     "assets/img/3/20260125_110053.jpg",
