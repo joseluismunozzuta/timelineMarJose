@@ -81,7 +81,7 @@ async function seedCoupleAndMoments() {
     ];
 
     // Rango de fechas para pruebas (enero-marzo 2026)
-    const start = new Date("2026-01-01T00:00:00-05:00");
+    const start = new Date("2026-03-10T00:00:00-05:00");
     const end = new Date("2026-03-31T23:59:59-05:00");
 
     const batch = writeBatch(db);
@@ -103,7 +103,7 @@ async function seedCoupleAndMoments() {
     );
 
     // 2) Crear 20 momentos: couples/{coupleId}/moments/{momentId}
-    for (let momentId = 1; momentId <= 20; momentId++) {
+    for (let momentId = 22; momentId <= 24; momentId++) {
         const momentRef = doc(db, "couples", COUPLE_ID, "moments", String(momentId));
 
         // Decide si en este seed ambos escriben o solo uno (para probar tu lógica)

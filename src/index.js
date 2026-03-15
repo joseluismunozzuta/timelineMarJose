@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { getFirestore, doc, collection, runTransaction, getDocs, setDoc, Timestamp, getDoc, query, orderBy, documentId, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { getFirestore, doc, collection, runTransaction, getDocs, setDoc,arrayUnion, Timestamp, getDoc, query, where, orderBy, documentId, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const SPOTIFY_SEARCH_URL = "https://us-central1-marlove-9b442.cloudfunctions.net/spotifySearch";
@@ -37,7 +37,7 @@ let dbData = [];
 let elements = [];
 const swipers = {};
 
-function resetTimeline() {
+function deleteTimelineData() {
     descriptionsGlobal = [];
     data = [];
     dbData = [];
@@ -46,12 +46,144 @@ function resetTimeline() {
     while (containerSection.firstChild) {
         containerSection.removeChild(containerSection.firstChild);
     }
+
+}
+
+function resetLoggedUserData() {
     MY_UID = null;
     PARTNER_UID = null;
     LEFT_NAME = null;
     RIGHT_NAME = null;
     coupleId = null;
     GENRE = null;
+}
+
+function getFirebaseAuthErrorMessage(error) {
+    switch (error.code) {
+        case "auth/email-already-in-use":
+            return "Ese correo ya está registrado.";
+        case "auth/invalid-email":
+            return "El correo no es válido.";
+        case "auth/weak-password":
+            return "La contraseña debe tener al menos 6 caracteres.";
+        case "auth/user-not-found":
+        case "auth/wrong-password":
+        case "auth/invalid-credential":
+            return "Correo o contraseña incorrectos.";
+        default:
+            return "Ocurrió un error. Inténtalo nuevamente.";
+    }
+}
+
+function showCoupleSetupView() {
+    document.getElementById("authView")?.classList.add("hidden");
+    document.getElementById("coupleSetupView")?.classList.remove("hidden");
+    document.getElementById("appView")?.classList.add("hidden");
+}
+
+function userRegister() {
+    const registerModal = document.getElementById("registerModal");
+    const registerError = document.getElementById("registerError");
+
+    function openRegisterModal() {
+        registerModal.classList.remove("hidden");
+        registerModal.classList.add("flex");
+        clearRegisterError();
+    }
+
+    function closeRegisterModal() {
+        registerModal.classList.add("hidden");
+        registerModal.classList.remove("flex");
+        clearRegisterError();
+    }
+
+    function setRegisterError(message) {
+        registerError.textContent = message;
+        registerError.classList.remove("hidden");
+    }
+
+    function clearRegisterError() {
+        registerError.textContent = "";
+        registerError.classList.add("hidden");
+    }
+
+    document.getElementById("btnRegisterOpen")?.addEventListener("click", openRegisterModal);
+    document.getElementById("btnCloseRegisterModal")?.addEventListener("click", closeRegisterModal);
+    document.getElementById("btnCancelRegister")?.addEventListener("click", closeRegisterModal);
+
+    registerModal?.addEventListener("click", function (e) {
+        if (e.target === registerModal) {
+            closeRegisterModal();
+        }
+    });
+
+    document.getElementById("btnRegister")?.addEventListener("click", async function () {
+        document.getElementById("btnRegister").disabled = true;
+        clearRegisterError();
+
+        console.log("here");
+
+        const name = document.getElementById("registerName").value.trim();
+        const email = document.getElementById("registerEmail").value.trim();
+        const password = document.getElementById("registerPassword").value.trim();
+        const genre = document.getElementById("registerGenre").value;
+
+        if (!name) {
+            setRegisterError("El nombre es obligatorio.");
+            return;
+        }
+
+        if (!email) {
+            setRegisterError("El email es obligatorio.");
+            return;
+        }
+
+        if (!password) {
+            setRegisterError("La contraseña es obligatoria.");
+            return;
+        }
+
+        if (!genre) {
+            setRegisterError("Debes seleccionar hombre o mujer.");
+            return;
+        }
+
+        try {
+            showLoader();
+
+            const credential = await createUserWithEmailAndPassword(auth, email, password);
+            const uid = credential.user.uid;
+            console.log("uid", uid);
+
+            await setDoc(doc(db, "users", uid), {
+                email,
+                displayName,
+                genre,
+                activeCoupleId: null,
+                createdAt: serverTimestamp()
+            });
+
+            closeRegisterModal();
+        } catch (error) {
+            console.log("error catcheado");
+            hideLoader();
+            setRegisterError(getFirebaseAuthErrorMessage(error));
+        }
+    });
+}
+
+async function waitForUserDoc(uid, retries = 10, delayMs = 300) {
+    for (let i = 0; i < retries; i++) {
+        const snap = await getDoc(doc(db, "users", uid));
+
+        if (snap.exists()) {
+            return snap.data();
+        }
+
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+
+    return null;
 }
 
 function showAuthView() {
@@ -124,6 +256,77 @@ function setupAuthUI() {
             hideLoader();
         }
     });
+
+    userRegister();
+
+    document.getElementById("btnJoinCouple")?.addEventListener("click", async function () {
+        const code = document.getElementById("joinCoupleCode").value.trim();
+        const errorEl = document.getElementById("joinCoupleError");
+
+        errorEl.classList.add("hidden");
+        errorEl.textContent = "";
+
+        if (!code) {
+            errorEl.textContent = "Debes ingresar un código.";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+
+        try {
+            showLoader();
+
+            const q = query(collection(db, "couples"), where("code", "==", code));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                hideLoader();
+                errorEl.textContent = "No se encontró ninguna pareja con ese código.";
+                errorEl.classList.remove("hidden");
+                return;
+            }
+
+            const coupleDoc = querySnapshot.docs[0];
+            const coupleIdentificator = coupleDoc.id;
+            const coupleData = coupleDoc.data();
+
+            const members = Array.isArray(coupleData.members) ? coupleData.members : [];
+
+            if (members.includes(MY_UID)) {
+                await updateDoc(doc(db, "users", MY_UID), {
+                    activeCoupleId: coupleId
+                });
+
+                hideLoader();
+                location.reload();
+                return;
+            }
+
+            if (members.length >= 2) {
+                hideLoader();
+                errorEl.textContent = "Esta pareja ya tiene 2 miembros.";
+                errorEl.classList.remove("hidden");
+                return;
+            }
+
+            await updateDoc(doc(db, "couples", coupleIdentificator), {
+                [`displayNames.${MY_UID}`]: myName,
+                [`genres.${MY_UID}`]: GENRE,
+                members: arrayUnion(MY_UID)
+            });
+
+            await updateDoc(doc(db, "users", MY_UID), {
+                activeCoupleId: coupleIdentificator
+            });
+
+            hideLoader();
+            location.reload();
+        } catch (error) {
+            hideLoader();
+            errorEl.textContent = "No se pudo unir a la pareja.";
+            errorEl.classList.remove("hidden");
+            console.error(error);
+        }
+    });
 }
 
 
@@ -184,9 +387,8 @@ function setAllCarouselItems() {
 
     const finalArray = [];
 
-    for (let i = 1; i <= 21; i++) {
+    for (let i = 1; i <= 22; i++) {
         let carousel = document.getElementById("carousel" + i);
-        console.log("carousel", i);
         const subArray = imagesUrls.filter(url => url.includes(`/img/${i - 1}/`));
         finalArray.push(subArray);
         for (var j = 0; j < finalArray[i - 1].length; j++) {
@@ -206,6 +408,7 @@ function initializeFirestore() {
 async function readCoupleId() {
     const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
     if (userDoc.exists()) {
+        if (!userDoc.data().activeCoupleId) return false;
         coupleId = userDoc.data().activeCoupleId;
         myName = userDoc.data().displayName;
         console.log("Couple ID: ", coupleId);
@@ -463,6 +666,40 @@ function fillFeelingSelect(genre, currentFeeling = null) {
 
 }
 
+function fillCreateMomentFeelingSelect(genre, currentFeeling = null) {
+
+    const select = document.getElementById("momentFeeling");
+    select.innerHTML = "";
+
+    const feelings = genre === "man" ? feelingsMan : feelingsWoman;
+
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "Selecciona un feeling";
+    defaultOption.disabled = true;
+
+    if (!currentFeeling) {
+        defaultOption.selected = true;
+    }
+
+    select.appendChild(defaultOption);
+
+    feelings.forEach(feeling => {
+
+        const option = document.createElement("option");
+        option.value = feeling;
+        option.textContent = feeling;
+
+        if (currentFeeling && feeling === currentFeeling) {
+            option.selected = true;
+        }
+
+        select.appendChild(option);
+
+    });
+
+}
+
 function renderSongHtml(song, visualIndex) {
     return `<div class="tooltip" data-tip="Abrir en Spotify">
                 <a class="btn btn-ghost btn-xs rounded-full" href="${song.url ?? null}" target="_blank"  id="spotifysongurl${visualIndex}"
@@ -645,6 +882,18 @@ function create3Dimage(url) {
             </div>`
 };
 
+function toDatetimeLocal(date) {
+    const pad = n => String(n).padStart(2, "0");
+
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1);
+    const day = pad(date.getDate());
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
 function addContainersAndSlides(dbDocs) {
     let newConts = Math.ceil(dbDocs / 5);
     let initial_containerid = 1;
@@ -748,8 +997,8 @@ function addContainersAndSlides(dbDocs) {
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
                 const ratingHtml = renderRating(initial_index);
                 const imgHtml = newMoment === true ? create3Dimage(momentData.urlImg ?? null) : `<div class="mx-4 h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>`;
-                const isoTimestamp = timestamp?.toDate().toISOString().slice(0, 16) ?? "";
-                const editMomentButtonHtml = myOwn === true ? ` <button class="btn btn-ghost btn-xs top-0 left-0 absolute" data-id="${initial_index}" data-action="editMoment"
+                const isoTimestamp = timestamp ? toDatetimeLocal(timestamp.toDate()) : "";
+                const editMomentButtonHtml = myOwn === true ? ` <button class="z-1000 btn btn-ghost btn-xs top-0 left-0 absolute" data-id="${initial_index}" data-action="editMoment"
                         data-title="${escapeHtml(titulo)}"
                         data-place="${escapeHtml(place)}"
                         data-sex="${sex ?? 0}"
@@ -872,7 +1121,7 @@ function addContainersAndSlides(dbDocs) {
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
                 const ratingHtml = renderRating(initial_index);
                 const imgHtml = newMoment === true ? create3Dimage(momentData.urlImg ?? null) : `<div class="mx-4 h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>`;
-                const isoTimestamp = timestamp?.toDate().toISOString().slice(0, 16) ?? "";
+                const isoTimestamp = timestamp ? toDatetimeLocal(timestamp.toDate()) : "";
                 const editMomentButtonHtml = myOwn === true ? ` <button class="z-1000 btn btn-ghost btn-xs top-0 left-0 absolute" data-id="${initial_index}" data-action="editMoment"
                                     data-title="${escapeHtml(titulo)}"
                         data-place="${escapeHtml(place)}"
@@ -1056,7 +1305,6 @@ async function initTimeLine() {
     PARTNER_UID = coupleDocs.data().members.find(m => m !== MY_UID);
     LEFT_NAME = coupleDocs.data().displayNames[MY_UID].toLowerCase();
     RIGHT_NAME = coupleDocs.data().displayNames[PARTNER_UID].toLowerCase();
-    GENRE = coupleDocs.data().genres[MY_UID];
 
     console.log("Left name: ", LEFT_NAME);
     console.log("Right name: ", RIGHT_NAME);
@@ -1095,16 +1343,40 @@ async function initTimeLine() {
     saveNewMomentLogic();
 }
 
+async function readMyUserData(uid) {
+    const userRef = doc(db, "users", uid);
+    const snap = await getDoc(userRef);
+
+    if (!snap.exists()) return null;
+
+    return snap.data();
+}
+
 function watchAuthState() {
     onAuthStateChanged(auth, async (user) => {
         showLoader();
         if (user) {
             MY_UID = auth.currentUser.uid;
+            console.log("My UID:", MY_UID);
+
+            const myUserData = await waitForUserDoc(MY_UID);
+
+            if (!myUserData) {
+                console.log("no hay info del usuario");
+                hideLoader();
+                setLoginError("No se encontró información del usuario.");
+                showAuthView();
+                return;
+            }
+
+            GENRE = myUserData.genre;
+
             var coupleFound = await readCoupleId();
+            console.log("Tiene pareja: ", coupleFound)
             if (!coupleFound) {
                 hideLoader();
                 setLoginError("No se encontró una pareja asociada a este usuario.");
-                showAuthView();
+                showCoupleSetupView();
             } else {
                 hideLoader();
                 showAppView();
@@ -1112,8 +1384,10 @@ function watchAuthState() {
             }
         } else {
             hideLoader();
-            resetTimeline();
+            deleteTimelineData();
+            resetLoggedUserData();
             showAuthView();
+            userRegister();
         }
     });
 }
@@ -1170,8 +1444,8 @@ function startCountdown(targetDateStr) {
 
 const imagesUrls = [
     "assets/img/0/IMG-20260115-WA0177.jpg",
-    "assets/img/1/IMG-20260118-WA0024.jpg",
     "assets/img/1/IMG-20260118-WA0106.jpg",
+    "assets/img/1/IMG-20260118-WA0024.jpg",
     "assets/img/1/IMG-20260118-WA0108.jpg",
     "assets/img/10/IMG_9024.gif",
     "assets/img/11/20260211_211913.jpg",
@@ -1182,6 +1456,7 @@ const imagesUrls = [
     "assets/img/11/IMG_9099.jpg",
     "assets/img/12/20260214_230711.jpg",
     "assets/img/12/IMG_9246.jpg",
+    "assets/img/12/IMGMar.jpg",
     "assets/img/12/IMG_9265.jpg",
     "assets/img/13/IMG_9355.jpg",
     "assets/img/14/20260221_031519.jpg",
@@ -1196,18 +1471,18 @@ const imagesUrls = [
     "assets/img/19/10IMG_9741.gif",
     "assets/img/19/158ca60ba-0361-14008.jpg",
     "assets/img/19/20260303_2116.jpg",
-    "assets/img/2/20260122_224946.jpg",
     "assets/img/2/IMG_8480.jpg",
+    "assets/img/2/20260122_224946.jpg",
     "assets/img/20/20260307_214814.webp",
     "assets/img/20/IMG_9835.webp",
     "assets/img/21/20260310_22400.webp",
     "assets/img/22/1IMG-20260314-WA0001.webp",
     "assets/img/22/IMG_9967.webp",
+    "assets/img/3/20260125_110053.jpg",
     "assets/img/3/20260124_183549.jpg",
     "assets/img/3/20260125_002820.jpg",
-    "assets/img/3/20260125_110053.jpg",
-    "assets/img/4/IMG_8573.jpg",
     "assets/img/4/IMG_85822.gif",
+    "assets/img/4/IMG_8573.jpg",
     "assets/img/5/IMG-20260129-WA0022.jpg",
     "assets/img/5/IMG_8639.jpg",
     "assets/img/6/20260130_194929.jpg",
@@ -1254,7 +1529,6 @@ function getLocalDateTimeInputValue(date) {
 
 function logicRegisterIntimacy() {
 
-    let intimacy = 0;
     const MAX_VISIBLE_HEARTS = 6;
 
     const hearts = document.getElementById("intimacyHearts");
@@ -1267,14 +1541,14 @@ function logicRegisterIntimacy() {
 
         hearts.innerHTML = "";
 
-        if (intimacy === 0) {
+        if (intimacyState === 0) {
             hearts.textContent = "💤";
             count.textContent = "Sin intimidad";
             hidden.value = 0;
             return;
         }
 
-        const visibleHearts = Math.min(intimacy, MAX_VISIBLE_HEARTS);
+        const visibleHearts = Math.min(intimacyState, MAX_VISIBLE_HEARTS);
 
         for (let i = 0; i < visibleHearts; i++) {
 
@@ -1288,18 +1562,18 @@ function logicRegisterIntimacy() {
             hearts.appendChild(heart);
         }
 
-        count.textContent = "x" + intimacy;
-        hidden.value = intimacy;
+        count.textContent = "x" + intimacyState;
+        hidden.value = intimacyState;
     }
 
     plus.onclick = () => {
-        intimacy++;
+        intimacyState++;
         renderQuantityIntimacy(true);
     };
 
     minus.onclick = () => {
-        if (intimacy > 0) {
-            intimacy--;
+        if (intimacyState > 0) {
+            intimacyState--;
             renderQuantityIntimacy(false);
         }
     };
@@ -1311,6 +1585,7 @@ function logicRegisterIntimacy() {
 function setIntimacyValue(value) {
     intimacyState = Number(value || 0);
     if (typeof window.renderQuantityIntimacy === "function") {
+        console.log("setting intimacy value");
         window.renderQuantityIntimacy(false);
     }
 }
@@ -1381,6 +1656,7 @@ function saveNewMomentLogic() {
         ratingSection.classList.remove("hidden");
         feelingSection.classList.remove("hidden");
 
+        fillCreateMomentFeelingSelect(GENRE);
         clearMomentModalForm();
         validateMomentForm();
     }
@@ -1492,8 +1768,6 @@ function saveNewMomentLogic() {
     document.addEventListener("click", (event) => {
         const editBtn = event.target.closest('[data-action="editMoment"]');
         if (!editBtn) return;
-
-        console.log("edit button clicked");
 
         openEditMomentModal(editBtn);
     });
@@ -1871,6 +2145,8 @@ function saveNewMomentLogic() {
         } finally {
             btnSaveMoment.disabled = false;
             validateMomentForm();
+            deleteTimelineData();
+            initTimeLine();
         }
     });
 

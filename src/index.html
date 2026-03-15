@@ -38,6 +38,136 @@
         </div>
     </div>
 
+    <!-- COUPLE SETUP VIEW -->
+    <section id="coupleSetupView" class="hidden min-h-screen bg-pink-700 p-6">
+        <div class="min-h-screen flex items-center justify-center">
+            <div class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Crear pareja -->
+                <div class="rounded-2xl bg-white shadow-xl p-6 hidden">
+                    <h2 class="text-2xl font-bold text-gray-900">Crear pareja</h2>
+                    <p class="text-gray-600 mt-2">
+                        Crea una nueva pareja y comparte luego el código con la otra persona.
+                    </p>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Código de pareja</label>
+                        <input id="createCoupleCode" type="text"
+                            class="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-pink-500"
+                            placeholder="Ej: MARJOSE2026" />
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ID documento pareja</label>
+                        <input id="createCoupleDocId" type="text"
+                            class="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-pink-500"
+                            placeholder="Ej: couple_mar_jose" />
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre visible de la pareja</label>
+                        <input id="createCoupleTitle" type="text"
+                            class="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-pink-500"
+                            placeholder="Ej: Mar & Jose" />
+                    </div>
+
+                    <div id="createCoupleError"
+                        class="mt-4 hidden rounded-xl bg-red-100 px-4 py-3 text-sm text-red-700"></div>
+
+                    <button id="btnCreateCouple"
+                        class="mt-6 w-full rounded-xl bg-pink-600 px-4 py-3 text-white font-medium hover:bg-pink-700">
+                        Crear pareja
+                    </button>
+                </div>
+
+                <!-- Unirse a pareja -->
+                <div class="rounded-2xl bg-white shadow-xl p-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Unirme a una pareja</h2>
+                    <p class="text-gray-600 mt-2">
+                        Ingresa el código que te compartieron.
+                    </p>
+
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Código</label>
+                        <input id="joinCoupleCode" type="text"
+                            class="w-full rounded-xl border border-gray-300 text-gray-900 px-4 py-3 outline-none focus:ring-2 focus:ring-pink-500"
+                            placeholder="Ingresa el código" />
+                    </div>
+
+                    <div id="joinCoupleError" class="mt-4 hidden rounded-xl bg-red-100 px-4 py-3 text-sm text-red-700">
+                    </div>
+
+                    <button id="btnJoinCouple"
+                        class="mt-6 w-full rounded-xl bg-zinc-800 px-4 py-3 text-white font-medium hover:bg-black">
+                        Unirme
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- USER REGISTER MODAL -->
+    <div id="registerModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[9999] p-4">
+        <div class="w-full max-w-md rounded-2xl bg-white shadow-2xl">
+            <div class="p-6">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-gray-900">Crear cuenta</h3>
+                    <button id="btnCloseRegisterModal" class="text-gray-500 hover:text-gray-800 text-2xl leading-none">
+                        &times;
+                    </button>
+                </div>
+
+                <p class="text-sm text-gray-600 mt-2">
+                    Regístrate para comenzar a usar tu timeline.
+                </p>
+
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                    <input id="registerName" type="text"
+                        class="w-full rounded-xl border border-gray-300 text-gray-900 px-4 py-3 outline-none focus:ring-2 focus:ring-pink-500"
+                        placeholder="Tu nombre" />
+                </div>
+
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input id="registerEmail" type="email"
+                        class="w-full rounded-xl border border-gray-300 px-4 text-gray-900 py-3 outline-none focus:ring-2 focus:ring-pink-500"
+                        placeholder="correo@ejemplo.com" />
+                </div>
+
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                    <input id="registerPassword" type="password"
+                        class="w-full rounded-xl border border-gray-300 px-4 text-gray-900 py-3 outline-none focus:ring-2 focus:ring-pink-500"
+                        placeholder="••••••••" />
+                </div>
+
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Género</label>
+                    <select id="registerGenre"
+                        class="w-full rounded-xl select border  border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-pink-500">
+                        <option value="">Selecciona una opción</option>
+                        <option value="man">Hombre</option>
+                        <option value="woman">Mujer</option>
+                    </select>
+                </div>
+
+                <div id="registerError" class="mt-4 hidden rounded-xl bg-red-100 px-4 py-3 text-sm text-red-700"></div>
+
+                <div class="mt-6 flex justify-end gap-2">
+                    <button id="btnCancelRegister"
+                        class="rounded-xl border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100">
+                        Cancelar
+                    </button>
+                    <button id="btnRegister" class="rounded-xl bg-pink-600 px-4 py-2 text-white hover:bg-pink-700">
+                        Registrarme
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- LOGIN VIEW -->
     <section id="authView" class="min-h-screen flex items-center justify-center p-6 bg-pink-700">
         <div class="card w-full max-w-md bg-zinc-100 shadow-xl shadow-gray-800">
@@ -57,12 +187,10 @@
 
                 <div class="alert alert-error mt-4 hidden" id="loginError"></div>
 
-                <div class="card-actions justify-end mt-4">
+                <div class="card-actions justify-end mt-4 gap-2">
+                    <button id="btnRegisterOpen" class="btn btn-secondary btn-outline">Registrarse</button>
                     <button id="btnLogin" class="btn btn-primary shadow-lg shadow-gray-600">Entrar</button>
                 </div>
-
-                <!-- opcional: botón registro, si quieres -->
-                <!-- <button id="btnRegister" class="btn btn-ghost btn-sm">Crear cuenta</button> -->
             </div>
         </div>
     </section>
@@ -135,7 +263,7 @@
     <dialog id="descriptionModal" class="modal z-2000">
         <div class="modal-box m-7 w-10/12 max-h-7/12 bg-mauve-500">
             <h3 class="text-lg text-center font-bold capitalize" id="modalUsername"></h3>
-            <p class="py-4 px-2 text-xs text-justify" id="modalDescription"></p>
+            <p class="py-4 px-2 text-xs text-justify whitespace-pre-line" id="modalDescription"></p>
             <h2 class="text-center" id="modalUserNameFeeling"></h2>
             <h2 class="text-center font-bold" id="modalFeeling"></h2>
             <h2 class="text-center">y calificó el momento con:</h2>
@@ -497,7 +625,7 @@
         </form>
     </dialog>
 
-    <div class="toast">
+    <div class="toast hidden">
         <div class="alert alert-info">
             <span>New message arrived.</span>
         </div>
