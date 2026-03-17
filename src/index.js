@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { getFirestore, doc, collection, runTransaction, getDocs, setDoc,arrayUnion, Timestamp, getDoc, query, where, orderBy, documentId, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { getFirestore, doc, collection, runTransaction, getDocs, setDoc, arrayUnion, Timestamp, getDoc, query, where, orderBy, documentId, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const SPOTIFY_SEARCH_URL = "https://us-central1-marlove-9b442.cloudfunctions.net/spotifySearch";
@@ -84,6 +84,7 @@ function showCoupleSetupView() {
 function userRegister() {
     const registerModal = document.getElementById("registerModal");
     const registerError = document.getElementById("registerError");
+    const btnRegister = document.getElementById("btnRegister");
 
     function openRegisterModal() {
         registerModal.classList.remove("hidden");
@@ -117,18 +118,18 @@ function userRegister() {
         }
     });
 
-    document.getElementById("btnRegister")?.addEventListener("click", async function () {
-        document.getElementById("btnRegister").disabled = true;
+    btnRegister?.addEventListener("click", async function () {
+        btnRegister.disabled = true;
         clearRegisterError();
 
         console.log("here");
 
-        const name = document.getElementById("registerName").value.trim();
+        const displayName = document.getElementById("registerName").value.trim();
         const email = document.getElementById("registerEmail").value.trim();
         const password = document.getElementById("registerPassword").value.trim();
         const genre = document.getElementById("registerGenre").value;
 
-        if (!name) {
+        if (!displayName) {
             setRegisterError("El nombre es obligatorio.");
             return;
         }
@@ -168,6 +169,8 @@ function userRegister() {
             console.log("error catcheado");
             hideLoader();
             setRegisterError(getFirebaseAuthErrorMessage(error));
+        } finally {
+            btnRegister.disabled = false;
         }
     });
 }
@@ -233,6 +236,12 @@ function setLogOutButton() {
 
 function setupAuthUI() {
     const btnLogin = document.getElementById("btnLogin");
+    const btnlogout = document.getElementById("btnLogOut");
+
+    btnlogout.addEventListener("click", async () => {
+        await signOut(auth);
+        location.reload();
+    })
 
 
     btnLogin?.addEventListener("click", async () => {
@@ -293,7 +302,7 @@ function setupAuthUI() {
 
             if (members.includes(MY_UID)) {
                 await updateDoc(doc(db, "users", MY_UID), {
-                    activeCoupleId: coupleId
+                    activeCoupleId: coupleIdentificator
                 });
 
                 hideLoader();
@@ -408,9 +417,12 @@ function initializeFirestore() {
 async function readCoupleId() {
     const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
     if (userDoc.exists()) {
-        if (!userDoc.data().activeCoupleId) return false;
-        coupleId = userDoc.data().activeCoupleId;
         myName = userDoc.data().displayName;
+        console.log("myName:", myName);
+        if (!userDoc.data().activeCoupleId) {
+            return false;
+        }
+        coupleId = userDoc.data().activeCoupleId;
         console.log("Couple ID: ", coupleId);
         return true;
     } else {
@@ -1356,6 +1368,10 @@ function watchAuthState() {
     onAuthStateChanged(auth, async (user) => {
         showLoader();
         if (user) {
+            console.log("Se encontro usuario logueado:", user);
+
+            document.getElementById("btnLogOut").classList.remove("hidden");
+
             MY_UID = auth.currentUser.uid;
             console.log("My UID:", MY_UID);
 
@@ -1383,11 +1399,12 @@ function watchAuthState() {
                 await initTimeLine();
             }
         } else {
+            console.log("No hay usuario logueado");
+            document.getElementById("btnLogOut").classList.add("hidden");
             hideLoader();
             deleteTimelineData();
             resetLoggedUserData();
             showAuthView();
-            userRegister();
         }
     });
 }
