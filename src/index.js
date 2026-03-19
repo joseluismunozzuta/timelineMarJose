@@ -881,7 +881,7 @@ function randInt(min, max) {
 }
 
 function create3Dimage(url) {
-    return `<div class="hover-3d h-90 w-8/12 mx-8">
+    return `<div class="hover-3d h-86 w-8/12 mx-8">
                 <figure class="max-w-100 h-full max-h-fit rounded-2xl">
                     <img src="${url}" alt="3D card" />
                 </figure>
@@ -1047,9 +1047,9 @@ function addContainersAndSlides(dbDocs) {
                         ${ratingHtml}
                     </div>
                     ${imgHtml}
-                    <div class="mt-2 flex flex-wrap flex-col items-center justify-center gap-1">
+                    <div class="mt-1 flex flex-wrap flex-col items-center justify-center gap-1">
                         <button class="btn btn-ghost btn-xs rounded-full">
-                            <span class="opacity-70">📍</span>
+                            <span class="opacity-90">📍</span>
                             <span id="place${initial_index}">${place}</span>
                         </button>
                         ${songHtml}
