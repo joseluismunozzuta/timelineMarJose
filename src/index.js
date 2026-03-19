@@ -742,7 +742,7 @@ function renderSide(name, avatarRand, feeling, initial_index, sideUid) {
                 <img id="avatar${name}${initial_index}" src="assets/img/avatars/${name}${avatarRand}.jpg" />
             </div>
         </div>
-        <div class="heartbeat absolute -bottom-5 left-1/2 -translate-x-1/2 badge bg-gray-900 text-[8px] px-1"
+        <div class="heartbeat absolute -bottom-5 left-1/2 -translate-x-1/2 badge bg-gray-900 text-[8px] px-1 text-white"
             id="emotion${name}${initial_index}">
             ${feeling ?? ""}
         </div>
@@ -1485,7 +1485,7 @@ const imagesUrls = [
     "assets/img/12/IMG_9265.jpg",
     "assets/img/13/IMG_9355.jpg",
     "assets/img/14/20260221_031519.jpg",
-    "assets/img/15/20260222.webp",
+    "assets/img/15/20260222.jpg",
     "assets/img/15/20260222_171437.jpg",
     "assets/img/15/20260222_17230.gif",
     "assets/img/16/100IMG_9508.gif",
@@ -1493,14 +1493,14 @@ const imagesUrls = [
     "assets/img/16/12IMG_9497.webp",
     "assets/img/17/IMG_9639.webp",
     "assets/img/18/IMG_9655.webp",
-    "assets/img/19/10IMG_9741.gif",
     "assets/img/19/158ca60ba-0361-14008.jpg",
-    "assets/img/19/20260303_2116.jpg",
+    "assets/img/19/5IMG_9741.gif",
+    "assets/img/19/200020260303_2116.jpg",
     "assets/img/2/IMG_8480.jpg",
     "assets/img/2/20260122_224946.jpg",
     "assets/img/21/20260307_214814.webp",
     "assets/img/21/IMG_9835.webp",
-    "assets/img/22/20260310_22400.webp",
+    "assets/img/22/20260310_22400.jpg",
     "assets/img/23/1IMG-20260314-WA0001.webp",
     "assets/img/23/IMG_9967.webp",
     "assets/img/3/20260125_110053.jpg",
