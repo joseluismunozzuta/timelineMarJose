@@ -30,6 +30,7 @@ let ratingTemp = 0;
 let intimacyState = 0;
 let momentModalMode = "create"; // "create" | "edit"
 let editingMomentId = null;
+let carouselImgIds = [];
 
 let descriptionsGlobal = [];
 let data = [];
@@ -56,6 +57,7 @@ function resetLoggedUserData() {
     RIGHT_NAME = null;
     coupleId = null;
     GENRE = null;
+    myName = null;
 }
 
 function getFirebaseAuthErrorMessage(error) {
@@ -342,7 +344,7 @@ function setupAuthUI() {
 function setBackgroundInitial() {
     let backgroundinitial = document.getElementById("container0");
     const min = 1;
-    const max = 6;
+    const max = 9;
     const random_number = Math.floor(Math.random() * (max - min + 1)) + min;
     backgroundinitial.style.backgroundImage = `url(assets/img/hero${random_number}.jpg)`;
     backgroundinitial.style.backgroundPosition = "center";
@@ -396,15 +398,15 @@ function setAllCarouselItems() {
 
     const finalArray = [];
 
-    for (let i = 1; i <= 22; i++) {
+    carouselImgIds.forEach(i => {
+        console.log("Carousel:", i);
         let carousel = document.getElementById("carousel" + i);
         const subArray = imagesUrls.filter(url => url.includes(`/img/${i - 1}/`));
         finalArray.push(subArray);
-        for (var j = 0; j < finalArray[i - 1].length; j++) {
+        for (var j = 0; j < finalArray[finalArray.length - 1].length; j++) {
             carousel.innerHTML += carouselItemHtml1 + subArray[j] + carouselItemHtml2;
         }
-    }
-
+    })
 }
 
 function initializeFirestore() {
@@ -1008,6 +1010,9 @@ function addContainersAndSlides(dbDocs) {
                 const songHtml = showSong ? renderSongHtml(song, initial_index) : "";
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
                 const ratingHtml = renderRating(initial_index);
+                if (!newMoment) {
+                    carouselImgIds.push(initial_index);
+                }
                 const imgHtml = newMoment === true ? create3Dimage(momentData.urlImg ?? null) : `<div class="mx-4 h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>`;
                 const isoTimestamp = timestamp ? toDatetimeLocal(timestamp.toDate()) : "";
                 const editMomentButtonHtml = myOwn === true ? ` <button class="z-1000 btn btn-ghost btn-xs top-0 left-0 absolute" data-id="${initial_index}" data-action="editMoment"
@@ -1132,6 +1137,9 @@ function addContainersAndSlides(dbDocs) {
                 const songHtml = showSong ? renderSongHtml(song, initial_index) : "";
                 const intimacyHtml = sex != 0 ? renderIntimacy(initial_index, sex) : "";
                 const ratingHtml = renderRating(initial_index);
+                if (!newMoment) {
+                    carouselImgIds.push(initial_index);
+                }
                 const imgHtml = newMoment === true ? create3Dimage(momentData.urlImg ?? null) : `<div class="mx-4 h-86 carousel carousel-vertical rounded-box" id="carousel${initial_index}"></div>`;
                 const isoTimestamp = timestamp ? toDatetimeLocal(timestamp.toDate()) : "";
                 const editMomentButtonHtml = myOwn === true ? ` <button class="z-1000 btn btn-ghost btn-xs top-0 left-0 absolute" data-id="${initial_index}" data-action="editMoment"
@@ -1490,11 +1498,11 @@ const imagesUrls = [
     "assets/img/19/20260303_2116.jpg",
     "assets/img/2/IMG_8480.jpg",
     "assets/img/2/20260122_224946.jpg",
-    "assets/img/20/20260307_214814.webp",
-    "assets/img/20/IMG_9835.webp",
-    "assets/img/21/20260310_22400.webp",
-    "assets/img/22/1IMG-20260314-WA0001.webp",
-    "assets/img/22/IMG_9967.webp",
+    "assets/img/21/20260307_214814.webp",
+    "assets/img/21/IMG_9835.webp",
+    "assets/img/22/20260310_22400.webp",
+    "assets/img/23/1IMG-20260314-WA0001.webp",
+    "assets/img/23/IMG_9967.webp",
     "assets/img/3/20260125_110053.jpg",
     "assets/img/3/20260124_183549.jpg",
     "assets/img/3/20260125_002820.jpg",
@@ -2051,26 +2059,55 @@ function saveNewMomentLogic() {
     }
 
     async function uploadMomentImage(file, coupleId, momentId) {
-        const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-        const filePath = `moments/${coupleId}/moment_${momentId}.${extension}`;
+
+        if (!file) throw new Error("No file provided");
+
+        if (!file.type.startsWith("image/")) {
+            console.log("No es imagen");
+            throw new Error("Selected file is not an image");
+        }
+
+        const filePath = `moments/${coupleId}/moment_${momentId}.jpg`;
+
+        const compressedBlob = await compressImage(file, {
+            maxWidth: 1600,
+            maxHeight: 1600,
+            quality: 0.8,
+            mimeType: "image/jpeg",
+            maxSizeMB: 1
+        });
 
         const storageRef = ref(storage, filePath);
 
-        await uploadBytes(storageRef, file);
+        await uploadBytes(storageRef, compressedBlob, {
+            contentType: "image/jpeg"
+        });
+
         const downloadURL = await getDownloadURL(storageRef);
 
         return downloadURL;
     }
 
     async function createMoment(coupleId, payload) {
+
+        let imageUrl;
         if (!selectedMomentImageFile) {
             throw new Error("No hay imagen seleccionada");
         }
 
         const momentId = await getNextMomentId(coupleId);
 
-        const imageUrl = await uploadMomentImage(selectedMomentImageFile, coupleId, momentId);
+        try {
 
+            imageUrl = await uploadMomentImage(selectedMomentImageFile, coupleId, momentId);
+
+            console.log("URL:", imageUrl);
+
+        } catch (error) {
+
+            console.error("Error subiendo imagen:", error);
+            return false;
+        }
         const momentRef = doc(db, "couples", coupleId, "moments", String(momentId));
         const momentDate = new Date(payload.timestamp);
 
@@ -2232,7 +2269,7 @@ function saveNewMomentLogic() {
 
         const result = await createMoment(coupleId, payload);
 
-        console.log("Momento guardado:", result);
+        console.log("Resulttado:", result);
 
         hideLoader();
 
@@ -2327,4 +2364,57 @@ function saveNewMomentLogic() {
     });
 
     logicRegisterIntimacy();
+}
+
+async function compressImage(file, options = {}) {
+    const {
+        maxWidth = 1600,
+        maxHeight = 1600,
+        quality = 0.8,
+        mimeType = "image/jpeg",
+        maxSizeMB = 1
+    } = options;
+
+    const imageBitmap = await createImageBitmap(file);
+
+    let { width, height } = imageBitmap;
+
+    // Redimensionar manteniendo proporción
+    if (width > maxWidth || height > maxHeight) {
+        const ratio = Math.min(maxWidth / width, maxHeight / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(imageBitmap, 0, 0, width, height);
+
+    let currentQuality = quality;
+    let blob = await canvasToBlob(canvas, mimeType, currentQuality);
+
+    // Si todavía pesa más de 1 MB, bajar calidad progresivamente
+    const maxBytes = maxSizeMB * 1024 * 1024;
+
+    while (blob.size > maxBytes && currentQuality > 0.4) {
+        currentQuality -= 0.05;
+        blob = await canvasToBlob(canvas, mimeType, currentQuality);
+    }
+
+    return blob;
+}
+
+function canvasToBlob(canvas, mimeType, quality) {
+    return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+            if (!blob) {
+                reject(new Error("No se pudo convertir canvas a Blob"));
+                return;
+            }
+            resolve(blob);
+        }, mimeType, quality);
+    });
 }
