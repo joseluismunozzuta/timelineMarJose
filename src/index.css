@@ -86,9 +86,11 @@
 
 .timeline .swiper-slide .timeline-title {
     font-weight: 500;
-    font-size: 28px;
+    color: black;
+    font-size: 24px;
     transform: translate3d(20px, 0, 0);
     transition: 0.2s ease 0.5s;
+    margin-bottom: 3px;
 }
 
 .timeline .swiper-slide-active .timeline-year {
@@ -98,10 +100,11 @@
 }
 
 .timeline .swiper-slide-active .timeline-title {
-    color: whitesmoke;
+    color: white;
     opacity: 1;
     transform: translate3d(0, 0, 0);
     transition: 0.4s ease 1.7s;
+    margin-bottom: 3px;
 }
 
 .timeline .swiper-slide .timeline-text {

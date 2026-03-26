@@ -448,12 +448,15 @@ const getCoupleDocs = async (db) => {
 function logicViewModal(element) {
     const visualIndex = Number(element.dataset.visualindex);
     const user = element.dataset.user;
+    const sourceAvatar = document.getElementById(`avatar${user}${visualIndex}`);
 
     let modal = document.getElementById("descriptionModal");
     let modalTitle = document.getElementById("modalUsername");
     let modalDescription = document.getElementById("modalDescription");
     let modalUserNameFeeling = document.getElementById("modalUserNameFeeling");
     let modalFeeling = document.getElementById("modalFeeling");
+    let modalDateTime = document.getElementById("datetimeDescription");
+    let avatarModal = document.getElementById("avatarModal");
 
     const descriptionData = descriptionsGlobal.find(d => d.visualIndex === visualIndex && d.descriptions[user] != null);
     if (descriptionData != null) {
@@ -461,6 +464,12 @@ function logicViewModal(element) {
         modalDescription.textContent = descriptionData.descriptions[user];
         modalUserNameFeeling.textContent = `${user.charAt(0).toUpperCase() + user.slice(1)} se sintió:`;
         modalFeeling.textContent = element.dataset.feeling ?? "Sin feeling registrado";
+        modalDateTime.textContent = `Agregado el ${formatFullDate(descriptionData.times[user])}`;
+
+        if (sourceAvatar && avatarModal) {
+            avatarModal.src = sourceAvatar.getAttribute("src");
+        }
+
 
         const v = String(descriptionData.ratings[user]);
         const target = document.querySelector(`input[name="rating-modal"][value="${v}"]`);
@@ -543,6 +552,7 @@ function reRenderSlide(visualIndex, feeling, rating) {
 
     let currentRate = descriptionsGlobal.find(d => d.visualIndex === Number(visualIndex))?.ratings[RIGHT_NAME.toLowerCase()] ?? undefined;
     let newRate = currentRate !== undefined ? (Number(currentRate) + Number(rating)) / 2 : rating;
+    newRate = Math.round(newRate * 2) / 2;
 
     setRating(visualIndex, newRate);
     document.addEventListener("click", (e) => {
@@ -825,9 +835,37 @@ function formatDate(timestamp) {
     let date = new Date(timestamp.toMillis());
     return date.toLocaleDateString('es-ES', {
         day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-    }).replace(/ de \d{4}$/, '');
+        month: 'long'
+    });
+}
+
+function formatSecondaryDate(timestamp) {
+    const date = timestamp.toDate();
+    const year = new Intl.DateTimeFormat("es-PE", {
+        year: "numeric"
+    }).format(date);
+    const time = new Intl.DateTimeFormat("es-PE", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
+    }).format(date).toLowerCase();
+
+    return `${year} • ${time}`;
+}
+
+function formatFullDate(timestamp) {
+    const date = timestamp.toDate();
+
+    const formatted = new Intl.DateTimeFormat("es-PE", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
+    }).format(date);
+
+    return formatted.replace(",", " •");
 }
 
 function createContainer(initial_containerid) {
@@ -965,6 +1003,7 @@ function addContainersAndSlides(dbDocs) {
 
                 timestamp = momentData.timestamp;
                 let formattedDateWithoutYear = formatDate(timestamp);
+                let secondaryDate = formatSecondaryDate(timestamp);
 
                 titulo = momentData.title;
                 sex = momentData.sex;
@@ -984,6 +1023,7 @@ function addContainersAndSlides(dbDocs) {
                     rating2 = rating1;
                 }
                 let ratingAverage = (rating1 + rating2) / 2;
+                ratingAverage = Math.round(ratingAverage * 2) / 2;
                 feeling1 = left?.feeling ?? null;
                 feeling2 = right?.feeling ?? null;
                 //console.log(momentData);
@@ -1042,12 +1082,13 @@ function addContainersAndSlides(dbDocs) {
 
                     <span
                         class="timeline-year">${formattedDateWithoutYear}</span>
+                        <p class="text-xs text-white/65">${secondaryDate}</p>
                     <h4 class="timeline-title px-6" id="title${initial_index}">${titulo}</h4>
-                    <div class="flex my-2 items-center justify-center mx-auto">
+                    ${imgHtml}
+                    <div class="flex my-1 items-center justify-center mx-auto">
                         ${ratingHtml}
                     </div>
-                    ${imgHtml}
-                    <div class="mt-1 flex flex-wrap flex-col items-center justify-center gap-1">
+                    <div class="my-1 flex flex-wrap flex-col items-center justify-center gap-1">
                         <button class="btn btn-ghost btn-xs rounded-full">
                             <span class="opacity-90">📍</span>
                             <span id="place${initial_index}">${place}</span>
@@ -1069,7 +1110,8 @@ function addContainersAndSlides(dbDocs) {
                     visualIndex: initial_index,
                     momentId: momentData.momentId,
                     descriptions: { [name1]: left?.description ?? null, [name2]: right?.description ?? null },
-                    ratings: { [name1]: left?.rating ?? null, [name2]: right?.rating ?? null }
+                    ratings: { [name1]: left?.rating ?? null, [name2]: right?.rating ?? null },
+                    times: { [name1]: left?.updatedAt ?? null, [name2]: right?.updatedAt ?? null }
                 });
 
                 var ind = { index: initial_index };
@@ -1092,6 +1134,7 @@ function addContainersAndSlides(dbDocs) {
 
                 timestamp = momentData.timestamp;
                 let formattedDateWithoutYear = formatDate(timestamp);
+                let secondaryDate = formatSecondaryDate(timestamp);
 
                 titulo = momentData.title;
                 sex = momentData.sex;
@@ -1111,6 +1154,7 @@ function addContainersAndSlides(dbDocs) {
                     rating2 = rating1;
                 }
                 let ratingAverage = (rating1 + rating2) / 2;
+                ratingAverage = Math.round(ratingAverage * 2) / 2;
                 feeling1 = left?.feeling ?? null;
                 feeling2 = right?.feeling ?? null;
                 //console.log(momentData);
@@ -1169,12 +1213,13 @@ function addContainersAndSlides(dbDocs) {
 
                     <span
                         class="timeline-year">${formattedDateWithoutYear}</span>
+                        <p class="text-xs text-white/65">${secondaryDate}</p>
                     <h4 class="timeline-title px-6" id="title${initial_index}">${titulo}</h4>
-                    <div class="flex my-2 items-center justify-center mx-auto">
+                    ${imgHtml}
+                    <div class="flex my-1 items-center justify-center mx-auto">
                         ${ratingHtml}
                     </div>
-                    ${imgHtml}
-                    <div class="mt-2 flex flex-wrap flex-col items-center justify-center gap-1">
+                    <div class="my-1 flex flex-wrap flex-col items-center justify-center gap-1">
                         <button class="btn btn-ghost btn-xs rounded-full">
                             <span class="opacity-70">📍</span>
                             <span id="place${initial_index}">${place}</span>
@@ -1195,7 +1240,8 @@ function addContainersAndSlides(dbDocs) {
                 descriptionsGlobal.push({
                     visualIndex: initial_index,
                     momentId: momentData.momentId, descriptions: { [name1]: left?.description ?? null, [name2]: right?.description ?? null },
-                    ratings: { [name1]: left?.rating ?? null, [name2]: right?.rating ?? null }
+                    ratings: { [name1]: left?.rating ?? null, [name2]: right?.rating ?? null },
+                    times: { [name1]: left?.updatedAt ?? null, [name2]: right?.updatedAt ?? null }
                 });
                 slides.push(ind);
                 initial_index++;

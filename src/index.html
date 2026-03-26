@@ -190,7 +190,8 @@
                 <div class="card-actions justify-end mt-4 gap-2">
                     <button id="btnRegisterOpen" class="btn btn-secondary btn-outline">Registrarse</button>
                     <button id="btnLogin" class="btn btn-primary shadow-lg shadow-gray-600">Entrar</button>
-                    <button id="btnLogOut" class="btn btn-info rounded-xl bg-purple-600 px-4 py-2 text-white hover:bg-purple-700">
+                    <button id="btnLogOut"
+                        class="btn btn-info rounded-xl bg-purple-600 px-4 py-2 text-white hover:bg-purple-700">
                         Cerrar Sesion
                     </button>
                 </div>
@@ -251,7 +252,7 @@
                         </div>
                         <!---->
 
-                        <p class="m-auto mb-3 px-4 text-white text-md">Aquí guardaremos para siempre esos momentos que
+                        <p class="m-auto mb-3 px-4 text-white text-base">Aquí guardaremos para siempre esos momentos que
                             tanto amamos compartir,
                             desde el primer día que nos vimos❤️</p>
                         <button id="scrollToContainer1" class="w-7/12 m-auto btn btn-secondary" data-value="0">Donde
@@ -265,12 +266,21 @@
 
     <dialog id="descriptionModal" class="modal z-2000">
         <div class="modal-box m-7 w-10/12 max-h-7/12 bg-mauve-500">
-            <h3 class="text-lg text-center font-bold capitalize" id="modalUsername"></h3>
-            <p class="py-4 px-2 text-xs text-justify whitespace-pre-line" id="modalDescription"></p>
-            <h2 class="text-center" id="modalUserNameFeeling"></h2>
-            <h2 class="text-center font-bold" id="modalFeeling"></h2>
-            <h2 class="text-center">y calificó el momento con:</h2>
+            <div class="flex justify-center">
+                <div class="avatar mx-auto transition-transform duration-300 hover:scale-110">
+                    <div class="ring-primary ring-offset-base-100 w-16 rounded-full ring-2 ring-offset-2">
+                        <img id="avatarModal" src="" />
+                    </div>
+                </div>
+            </div>
+            <h3 class="px-2 text-lg text-center text-black font-bold capitalize" id="modalUsername"></h3>
+            <p class="p-2 text-xs text-justify whitespace-pre-line" id="modalDescription"></p>
+            <div class="flex flex-row flex-nowrap justify-center gap-1 my-4">
+                <h2 class="text-center text-sm" id="modalUserNameFeeling"></h2>
+                <span class="text-center font-bold text-black text-sm" id="modalFeeling"></span>
+            </div>
             <div class="flex flex-col justify-center">
+                <h2 class="text-center text-xs my-1">y calificó el momento con:</h2>
                 <div class="rating rating-sm rating-half mx-auto">
                     <input type="radio" disabled name="rating-modal" class="rating-hidden hidden" />
                     <input type="radio" disabled name="rating-modal" value="0.5"
@@ -295,7 +305,10 @@
                         class="mask mask-star-2 mask-half-2 bg-orange-400" />
                 </div>
 
-                <button class="btn btn-primary btn-sm w-1/2 mx-auto my-3 hidden" id="editMoment"
+                <span class="px-2 my-3 text-start italic text-black/60 text-[9px]" id="datetimeDescription">Agregado
+                    el</span>
+
+                <button class="btn btn-primary btn-sm w-1/3 mx-auto my-2 hidden" id="editMoment"
                     data-momentid="0">Editar</button>
             </div>
 
@@ -535,7 +548,7 @@
                             <!-- Checkbox -->
                             <label class="label cursor-pointer justify-start gap-3">
                                 <input type="checkbox" id="momentNoSong" class="checkbox checkbox-sm" />
-                                <span class="label-text text-md">Este momento no tiene canción</span>
+                                <span class="label-text text-base">Este momento no tiene canción</span>
                             </label>
 
                         </div>
