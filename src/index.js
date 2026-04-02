@@ -464,7 +464,12 @@ function logicViewModal(element) {
         modalDescription.textContent = descriptionData.descriptions[user];
         modalUserNameFeeling.textContent = `${user.charAt(0).toUpperCase() + user.slice(1)} se sintió:`;
         modalFeeling.textContent = element.dataset.feeling ?? "Sin feeling registrado";
-        modalDateTime.textContent = `Agregado el ${formatFullDate(descriptionData.times[user])}`;
+
+        if (descriptionData.timesUpdated && descriptionData.timesUpdated[user]) {
+            modalDateTime.textContent = `Actualizado el ${formatFullDate(descriptionData.timesUpdated[user])}`;
+        } else if (descriptionData.times && descriptionData.times[user]) {
+            modalDateTime.textContent = `Agregado el ${formatFullDate(descriptionData.times[user])}`;
+        }
 
         if (sourceAvatar && avatarModal) {
             avatarModal.src = sourceAvatar.getAttribute("src");
@@ -589,38 +594,28 @@ async function saveMomentParticipant(momentId, justSaveParameter = true) {
 
     const momentRef = doc(db, "couples", coupleId, "moments", String(momentId));
 
-    let data = {};
+    let data = {
+        [`participants.${uid}.name`]: myName || "User",
+        [`participants.${uid}.description`]: description,
+        [`participants.${uid}.feeling`]: feeling,
+        [`participants.${uid}.rating`]: rating
+    };
 
     if (justSaveParameter) {
-        data = {
-            [`participants.${uid}`]: {
-                name: myName || "User",
-                description: description,
-                feeling: feeling,
-                rating: rating,
-                createdAt: serverTimestamp()
-            }
-        };
+        data[`participants.${uid}.createdAt`] = serverTimestamp();
     } else {
-        data = {
-            [`participants.${uid}`]: {
-                name: myName || "User",
-                description: description,
-                feeling: feeling,
-                rating: rating,
-                updatedAt: serverTimestamp()
-            }
-        };
+        data[`participants.${uid}.updatedAt`] = serverTimestamp();
     }
 
     await updateDoc(momentRef, data);
-    updateDescriptionsGlobal(momentId, myName.toLowerCase(), description, rating);
+    const localNow = Timestamp.now();
+    updateDescriptionsGlobal(momentId, myName.toLowerCase(), description, rating, justSaveParameter, localNow);
 
     console.log("Momento guardado correctamente");//TODO MANEJAR TOAST
 
 }
 
-function updateDescriptionsGlobal(momentId, userName, description, rating) {
+function updateDescriptionsGlobal(momentId, userName, description, rating, justSaveParameter, timeValue) {
     const moment = descriptionsGlobal.find(item => Number(item.momentId) === Number(momentId));
 
     if (!moment) {
@@ -631,6 +626,12 @@ function updateDescriptionsGlobal(momentId, userName, description, rating) {
             },
             ratings: {
                 [userName]: rating
+            },
+            times: {
+                [userName]: justSaveParameter ? timeValue : null
+            },
+            timesUpdated: {
+                [userName]: justSaveParameter ? null : timeValue
             }
         });
         return;
@@ -644,8 +645,24 @@ function updateDescriptionsGlobal(momentId, userName, description, rating) {
         moment.ratings = {};
     }
 
+    if (!moment.times) {
+        moment.times = {};
+    }
+
+    if (!moment.timesUpdated) {
+        moment.timesUpdated = {};
+    }
     moment.descriptions[userName] = description;
     moment.ratings[userName] = rating;
+    
+    if (justSaveParameter) {
+        // Solo setear createdAt si aún no existe
+        if (!moment.times[userName]) {
+            moment.times[userName] = timeValue;
+        }
+    } else {
+        moment.timesUpdated[userName] = timeValue;
+    }
 
     if (Object.prototype.hasOwnProperty.call(moment.descriptions, "undefined")) {
         delete moment.descriptions.undefined;
@@ -654,6 +671,15 @@ function updateDescriptionsGlobal(momentId, userName, description, rating) {
     if (Object.prototype.hasOwnProperty.call(moment.ratings, "undefined")) {
         delete moment.ratings.undefined;
     }
+
+    if (Object.prototype.hasOwnProperty.call(moment.times, "undefined")) {
+        delete moment.times.undefined;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(moment.timesUpdated, "undefined")) {
+        delete moment.timesUpdated.undefined;
+    }
+
 }
 
 function fillFeelingSelect(genre, currentFeeling = null) {
@@ -1111,7 +1137,8 @@ function addContainersAndSlides(dbDocs) {
                     momentId: momentData.momentId,
                     descriptions: { [name1]: left?.description ?? null, [name2]: right?.description ?? null },
                     ratings: { [name1]: left?.rating ?? null, [name2]: right?.rating ?? null },
-                    times: { [name1]: left?.updatedAt ?? null, [name2]: right?.updatedAt ?? null }
+                    timesUpdated: { [name1]: left?.updatedAt ?? null, [name2]: right?.updatedAt ?? null },
+                    times: { [name1]: left?.createdAt ?? null, [name2]: right?.createdAt ?? null }
                 });
 
                 var ind = { index: initial_index };
@@ -1241,7 +1268,8 @@ function addContainersAndSlides(dbDocs) {
                     visualIndex: initial_index,
                     momentId: momentData.momentId, descriptions: { [name1]: left?.description ?? null, [name2]: right?.description ?? null },
                     ratings: { [name1]: left?.rating ?? null, [name2]: right?.rating ?? null },
-                    times: { [name1]: left?.updatedAt ?? null, [name2]: right?.updatedAt ?? null }
+                    timesUpdated: { [name1]: left?.updatedAt ?? null, [name2]: right?.updatedAt ?? null },
+                    times: { [name1]: left?.createdAt ?? null, [name2]: right?.createdAt ?? null }
                 });
                 slides.push(ind);
                 initial_index++;
