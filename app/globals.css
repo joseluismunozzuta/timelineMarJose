@@ -46,17 +46,29 @@
     background-position: center center;
 }
 
+/*
+ * Velo oscuro sobre el fondo del slide.
+ *
+ * Antes era un blob circular fuera de pantalla con una sombra difuminada de
+ * 60vw. En desktop oscurecía el contenido, pero en móvil 60vw son ~230px y el
+ * blob quedaba fuera de la pantalla, así que el texto blanco caía sobre los
+ * fondos color crema y no se leía. Un degradado cubre el slide entero y se
+ * comporta igual en cualquier tamaño.
+ *
+ * Más oscuro arriba y abajo (donde va el texto), más suave en medio (la foto).
+ */
 .timeline .swiper-slide::after {
     content: "";
     position: absolute;
+    inset: 0;
     z-index: 1;
-    right: -115%;
-    bottom: -10%;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, .7);
-    box-shadow: -230px 0 150px 60vw rgba(0, 0, 0, 0.45);
-    border-radius: 100%;
+    pointer-events: none;
+    background: linear-gradient(to bottom,
+            rgba(0, 0, 0, .78) 0%,
+            rgba(0, 0, 0, .66) 22%,
+            rgba(0, 0, 0, .58) 45%,
+            rgba(0, 0, 0, .7) 72%,
+            rgba(0, 0, 0, .82) 100%);
 }
 
 .timeline .swiper-slide-content {
@@ -81,12 +93,12 @@
     color: rgb(247, 247, 247);
     font-weight: 200;
     opacity: 0;
-    transition: 0.2s ease 0.4s;
+    transition: 0.2s ease 0.1s;
 }
 
 .timeline .swiper-slide .timeline-title {
     font-weight: 500;
-    color: black;
+    color: white;
     font-size: 24px;
     transform: translate3d(20px, 0, 0);
     transition: 0.2s ease 0.5s;
@@ -96,14 +108,16 @@
 .timeline .swiper-slide-active .timeline-year {
     opacity: 1;
     transform: translate3d(0, 0, 0);
-    transition: 0.4s ease 1.6s;
+    /* Antes 1.6s: la fecha tardaba casi dos segundos en aparecer. */
+    transition: 0.4s ease 0.15s;
 }
 
 .timeline .swiper-slide-active .timeline-title {
     color: white;
     opacity: 1;
     transform: translate3d(0, 0, 0);
-    transition: 0.4s ease 1.7s;
+    /* Antes 1.7s. Se mantiene un escalonado corto tras la fecha. */
+    transition: 0.4s ease 0.25s;
     margin-bottom: 3px;
 }
 
@@ -268,4 +282,19 @@
 
 .heart-pop {
     animation: heartPop 0.35s ease;
+}
+/* Fundido de entrada de cada foto del hero. La opacidad base es 1, así que al
+   terminar la animación (y al quitarle la clase) la capa se queda visible. */
+@keyframes heroBgFade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.hero-bg-fade {
+    animation: heroBgFade 1200ms ease-out;
 }

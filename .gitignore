@@ -1,5 +1,36 @@
+# Dependencias
 node_modules
-functions/.env
-functions/node_modules
+
+# Next.js
+.next
+out
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# Firebase
 .firebase
 firebase-debug.log
+firebase-debug.*.log
+functions/node_modules
+
+# Netlify
+.netlify
+
+# Variables de entorno (nunca deben subirse)
+.env
+.env.*
+!.env.example
+functions/.env
+
+# Herramientas y sistema
+.sfdx
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+
+# Claude Code: launch.json sí se versiona (arranca el dev server),
+# la configuración local de cada máquina no.
+.claude/settings.local.json
