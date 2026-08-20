@@ -31,6 +31,5 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# Claude Code: launch.json sí se versiona (arranca el dev server),
-# la configuración local de cada máquina no.
-.claude/settings.local.json
+# Claude Code
+.claude
