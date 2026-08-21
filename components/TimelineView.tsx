@@ -11,7 +11,13 @@ import ReviewFormModal, { type ReviewDraft } from "@/components/modals/ReviewFor
 import ReviewModal from "@/components/modals/ReviewModal";
 import Timeline from "@/components/timeline/Timeline";
 import { useTimeline } from "@/hooks/useTimeline";
-import { createMoment, editMoment, saveReview } from "@/lib/moments";
+import {
+    createMoment,
+    editMoment,
+    saveReview,
+    setReviewAudio,
+    uploadReviewAudio
+} from "@/lib/moments";
 import type { IndexedMoment } from "@/types";
 
 /** Duración de la animación al deslizar entre slides, igual que el original. */
@@ -89,13 +95,30 @@ export default function TimelineView() {
         setBusy(true);
 
         try {
+            // Se sube antes de escribir en Firestore: así el documento nunca
+            // apunta a un audio que falló al subirse.
+            const audioUrl = draft.audio
+                ? await uploadReviewAudio(
+                      coupleId,
+                      momentId,
+                      uid,
+                      draft.audio.blob,
+                      draft.audio.extension
+                  )
+                : undefined;
+
             // El listener de Firestore repinta el slide solo, sin esperar al servidor.
             await saveReview(
                 coupleId,
                 momentId,
                 uid,
                 userDoc?.displayName ?? "User",
-                draft,
+                {
+                    description: draft.description,
+                    feeling: draft.feeling,
+                    rating: draft.rating,
+                    audioUrl
+                },
                 mode === "add"
             );
         } catch (e) {
@@ -136,7 +159,7 @@ export default function TimelineView() {
 
         try {
             if (state.mode === "create") {
-                await createMoment(
+                const momentId = await createMoment(
                     coupleId,
                     uid,
                     userDoc?.displayName ?? "User",
@@ -152,6 +175,17 @@ export default function TimelineView() {
                     },
                     state.file
                 );
+
+                if (draft.audio) {
+                    const audioUrl = await uploadReviewAudio(
+                        coupleId,
+                        momentId,
+                        uid,
+                        draft.audio.blob,
+                        draft.audio.extension
+                    );
+                    await setReviewAudio(coupleId, momentId, uid, audioUrl);
+                }
             } else {
                 await editMoment(coupleId, state.momentId, {
                     title: draft.title,
@@ -181,6 +215,9 @@ export default function TimelineView() {
     const myUid = uid ?? "";
     const displayNames = couple?.displayNames ?? {};
 
+    // Orden estable: el de members, no el del objeto displayNames.
+    const names = (couple?.members ?? []).map((memberUid) => displayNames[memberUid]).filter(Boolean);
+
     const viewedMoment = findMoment(viewingReview?.momentId);
     const reviewedMoment = findMoment(editingReview?.momentId);
     const editedMoment = momentModal?.mode === "edit" ? findMoment(momentModal.momentId) : null;
@@ -199,8 +236,7 @@ export default function TimelineView() {
 
             <Hero
                 title={couple?.title}
-                // Orden estable: el de members, no el del objeto displayNames.
-                names={couple?.members?.map((memberUid) => displayNames[memberUid]).filter(Boolean)}
+                names={names}
                 onNewMoment={handleNewMoment}
                 onLogout={logout}
                 onGoToStart={goToStart}
@@ -235,6 +271,7 @@ export default function TimelineView() {
                         ? reviewedMoment?.participants?.[myUid] ?? null
                         : null
                 }
+                names={names}
                 onClose={() => setEditingReview(null)}
                 onSave={handleSaveReview}
             />
@@ -245,6 +282,7 @@ export default function TimelineView() {
                 moment={editedMoment}
                 imagePreview={momentModal?.mode === "create" ? momentModal.preview : null}
                 genre={userDoc?.genre ?? null}
+                names={names}
                 onClose={() => setMomentModal(null)}
                 onChangeImage={handleNewMoment}
                 onSave={handleSaveMoment}

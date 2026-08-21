@@ -17,7 +17,7 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { db, storage } from "./firebase";
 import { compressImage } from "./images";
 import type { CoupleDoc, IndexedMoment, Moment, Song, SpotifyTrack } from "@/types";
-import { SPOTIFY_SEARCH_URL } from "./constants";
+import { SPOTIFY_SEARCH_URL, TRANSCRIBE_URL } from "./constants";
 
 export async function fetchCouple(coupleId: string): Promise<CoupleDoc | null> {
     const snap = await getDoc(doc(db, "couples", coupleId));
@@ -81,6 +81,8 @@ type ReviewInput = {
     description: string;
     feeling: string;
     rating: number;
+    /** undefined = no se toca lo que hubiera; null = se borra. */
+    audioUrl?: string | null;
 };
 
 /**
@@ -103,6 +105,12 @@ export async function saveReview(
         [`participants.${uid}.feeling`]: review.feeling,
         [`participants.${uid}.rating`]: review.rating
     };
+
+    // Solo se escribe si viene definido: al editar solo el texto, la nota de
+    // voz que ya hubiera guardada se queda como está.
+    if (review.audioUrl !== undefined) {
+        payload[`participants.${uid}.audioUrl`] = review.audioUrl;
+    }
 
     payload[`participants.${uid}.${isNew ? "createdAt" : "updatedAt"}`] = serverTimestamp();
 
@@ -152,6 +160,8 @@ export type CreateMomentInput = {
     description: string;
     rating: number | null;
     feeling: string;
+    /** Nota de voz de la que salió la descripción, si se grabó. */
+    audioUrl?: string | null;
     /** valor de <input type="datetime-local"> */
     timestamp: string;
 };
@@ -186,6 +196,7 @@ export async function createMoment(
                 feeling: input.feeling,
                 name: displayName,
                 rating: input.rating,
+                audioUrl: input.audioUrl ?? null,
                 createdAt: serverTimestamp()
             }
         }
@@ -231,6 +242,74 @@ function normalizeSong(song: Song | null): Song | null {
         url: song.url.trim(),
         image: song.image?.trim() || null
     };
+}
+
+/**
+ * Manda el audio a la Cloud Function, que llama a Gemini y devuelve la
+ * descripción ya redactada. Los nombres de la pareja van como contexto para
+ * que el modelo no confunda "Mar" con la palabra común.
+ */
+export async function transcribeAudio(
+    idToken: string,
+    audioBase64: string,
+    mimeType: string,
+    names: string[]
+): Promise<string> {
+    const response = await fetch(TRANSCRIBE_URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ audioBase64, mimeType, names })
+    });
+
+    if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+
+        // El detalle viene del servicio de arriba; se registra completo en la
+        // consola y al usuario se le muestra solo el mensaje corto.
+        if (body.detail) console.error("Detalle del error de transcripción:", body.status, body.detail);
+
+        throw new Error(body.error || "No se pudo procesar el audio");
+    }
+
+    const data = await response.json();
+    return data.text as string;
+}
+
+/**
+ * Escribe solo la URL del audio de una reseña.
+ *
+ * Al crear un momento hace falta un segundo paso: la ruta en Storage lleva el
+ * momentId, y ese id no existe hasta que createMoment reserva el siguiente.
+ */
+export async function setReviewAudio(
+    coupleId: string,
+    momentId: number,
+    uid: string,
+    audioUrl: string
+): Promise<void> {
+    await updateDoc(doc(db, "couples", coupleId, "moments", String(momentId)), {
+        [`participants.${uid}.audioUrl`]: audioUrl
+    });
+}
+
+/** Sube la grabación original y devuelve su URL de descarga. */
+export async function uploadReviewAudio(
+    coupleId: string,
+    momentId: number,
+    uid: string,
+    audio: Blob,
+    extension: string
+): Promise<string> {
+    const storageRef = ref(
+        storage,
+        `moments/${coupleId}/audio/moment_${momentId}_${uid}.${extension}`
+    );
+
+    await uploadBytes(storageRef, audio, { contentType: audio.type });
+    return getDownloadURL(storageRef);
 }
 
 export async function searchSpotifyTracks(searchQuery: string): Promise<SpotifyTrack[]> {

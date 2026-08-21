@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import AudioRecorder, { type RecordedAudio } from "@/components/ui/AudioRecorder";
 import Modal from "@/components/ui/Modal";
 import RatingInput from "@/components/ui/RatingInput";
 import { feelingsFor } from "@/lib/constants";
@@ -11,6 +12,8 @@ export type ReviewDraft = {
     description: string;
     feeling: string;
     rating: number;
+    /** Grabación nueva. null = no se grabó nada en esta edición. */
+    audio: RecordedAudio | null;
 };
 
 type Props = {
@@ -19,6 +22,8 @@ type Props = {
     mode: "add" | "edit";
     genre: string | null;
     existing: Participant | null;
+    /** Nombres de la pareja, como contexto para la transcripción. */
+    names: string[];
     onClose: () => void;
     onSave: (draft: ReviewDraft) => Promise<void>;
 };
@@ -28,12 +33,14 @@ export default function ReviewFormModal({
     mode,
     genre,
     existing,
+    names,
     onClose,
     onSave
 }: Props) {
     const [description, setDescription] = useState("");
     const [feeling, setFeeling] = useState("");
     const [rating, setRating] = useState(0);
+    const [audio, setAudio] = useState<RecordedAudio | null>(null);
     const [saving, setSaving] = useState(false);
 
     const open = moment != null;
@@ -45,12 +52,13 @@ export default function ReviewFormModal({
         setDescription(existing?.description ?? "");
         setFeeling(existing?.feeling ?? "");
         setRating(existing?.rating ?? 0);
+        setAudio(null);
     }, [open, moment?.momentId, mode]);
 
     async function handleSave() {
         setSaving(true);
         try {
-            await onSave({ description: description.trim(), feeling, rating });
+            await onSave({ description: description.trim(), feeling, rating, audio });
         } finally {
             setSaving(false);
         }
@@ -71,6 +79,13 @@ export default function ReviewFormModal({
             </p>
 
             <div className="flex flex-col gap-4 mt-4">
+                <AudioRecorder
+                    names={names}
+                    existingAudioUrl={existing?.audioUrl}
+                    onTranscribed={setDescription}
+                    onAudioChange={setAudio}
+                />
+
                 <div className="form-control">
                     <label className="label" htmlFor="reviewText">
                         <span className="label-text font-semibold">Descripción</span>

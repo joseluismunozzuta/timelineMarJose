@@ -1,5 +1,10 @@
-export const SPOTIFY_SEARCH_URL =
-    "https://us-central1-marlove-9b442.cloudfunctions.net/spotifySearch";
+const FUNCTIONS_BASE = "https://us-central1-marlove-9b442.cloudfunctions.net";
+
+export const SPOTIFY_SEARCH_URL = `${FUNCTIONS_BASE}/spotifySearch`;
+export const TRANSCRIBE_URL = `${FUNCTIONS_BASE}/transcribeMoment`;
+
+/** Tope de grabación. Por encima, el audio se corta solo. */
+export const MAX_RECORDING_SECONDS = 180;
 
 /** Momentos por bloque: cada bloque es un Swiper independiente. */
 export const MOMENTS_PER_BLOCK = 5;

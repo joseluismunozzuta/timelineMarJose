@@ -37,6 +37,11 @@ export type Participant = {
     description: string;
     feeling: string;
     rating: number | null;
+    /**
+     * Nota de voz de la que salió la descripción, en Storage.
+     * El texto se puede editar a mano después; el audio es el original.
+     */
+    audioUrl?: string | null;
     createdAt?: Timestamp | null;
     updatedAt?: Timestamp | null;
 };

@@ -61,6 +61,15 @@ export default function ReviewModal({
                 {participant?.description}
             </p>
 
+            {participant?.audioUrl && (
+                <div className="px-2 pb-1">
+                    <p className="mb-1 text-[10px] italic text-black/50">
+                        Contado con su voz 🎙️
+                    </p>
+                    <audio controls src={participant.audioUrl} className="w-full" />
+                </div>
+            )}
+
             <div className="flex flex-row flex-nowrap justify-center gap-1 my-4">
                 <h2 className="text-center text-sm">{capitalize(name)} se sintió:</h2>
                 <span className="text-center font-bold text-black text-sm">

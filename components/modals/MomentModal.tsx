@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import AudioRecorder, { type RecordedAudio } from "@/components/ui/AudioRecorder";
 import Modal from "@/components/ui/Modal";
 import RatingInput from "@/components/ui/RatingInput";
 import { feelingsFor } from "@/lib/constants";
@@ -20,6 +21,8 @@ export type MomentDraft = {
     rating: number | null;
     feeling: string;
     timestamp: string;
+    /** Nota de voz de la que salió la descripción. */
+    audio: RecordedAudio | null;
 };
 
 type Props = {
@@ -31,6 +34,8 @@ type Props = {
     /** Solo en modo creación: la imagen elegida antes de abrir. */
     imagePreview: string | null;
     genre: string | null;
+    /** Nombres de la pareja, como contexto para la transcripción. */
+    names: string[];
     onClose: () => void;
     onChangeImage: () => void;
     onSave: (draft: MomentDraft) => Promise<void>;
@@ -44,7 +49,8 @@ const emptyDraft = (): MomentDraft => ({
     description: "",
     rating: null,
     feeling: "",
-    timestamp: toDatetimeLocal(new Date())
+    timestamp: toDatetimeLocal(new Date()),
+    audio: null
 });
 
 export default function MomentModal({
@@ -53,6 +59,7 @@ export default function MomentModal({
     moment,
     imagePreview,
     genre,
+    names,
     onClose,
     onChangeImage,
     onSave
@@ -95,7 +102,8 @@ export default function MomentModal({
             description: "",
             rating: null,
             feeling: "",
-            timestamp: moment.timestamp ? toDatetimeLocal(moment.timestamp.toDate()) : ""
+            timestamp: moment.timestamp ? toDatetimeLocal(moment.timestamp.toDate()) : "",
+            audio: null
         });
         setNoSong(moment.song == null);
     }, [open, mode, moment?.momentId]);
@@ -214,6 +222,12 @@ export default function MomentModal({
 
                         {isCreate && (
                             <>
+                                <AudioRecorder
+                                    names={names}
+                                    onTranscribed={(text) => update("description", text)}
+                                    onAudioChange={(audio) => update("audio", audio)}
+                                />
+
                                 <div className="form-control">
                                     <span className="label-text font-medium mb-2">Descripción</span>
                                     <textarea
