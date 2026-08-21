@@ -98,12 +98,17 @@ export default function TimelineBlock({
                     visible
                     onClick={() => scrollToBlock(blockId - 1)}
                 />
-                {/* Flecha arriba -> bloque siguiente (más reciente), que está encima. */}
+                {/*
+                  Flecha arriba -> bloque siguiente (más reciente), que está encima.
+                  En el bloque más nuevo no hay siguiente, pero justo encima está
+                  el hero (container0), así que la flecha sigue teniendo destino y
+                  no hace falta ocultarla.
+                */}
                 <ScrollButton
                     path={ARROW_UP}
                     position="left-0"
-                    visible={hasNewerBlock}
-                    onClick={() => scrollToBlock(blockId + 1)}
+                    visible
+                    onClick={() => scrollToBlock(hasNewerBlock ? blockId + 1 : 0)}
                 />
 
                 <Swiper

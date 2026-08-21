@@ -5,6 +5,18 @@ import { useEffect, useState } from "react";
 import AudioRecorder, { type RecordedAudio } from "@/components/ui/AudioRecorder";
 import Modal from "@/components/ui/Modal";
 import RatingInput from "@/components/ui/RatingInput";
+import {
+    SHEET_BODY,
+    SHEET_BOX,
+    SHEET_BUTTON_GHOST,
+    SHEET_BUTTON_PRIMARY,
+    SHEET_DIALOG,
+    SHEET_FIELD,
+    SHEET_FOOTER,
+    SHEET_GRABBER,
+    SHEET_LABEL,
+    SHEET_OPTION
+} from "@/components/ui/sheetStyles";
 import { feelingsFor } from "@/lib/constants";
 import type { IndexedMoment, Participant } from "@/types";
 
@@ -68,17 +80,34 @@ export default function ReviewFormModal({
         <Modal
             open={open}
             onClose={onClose}
-            boxClassName="mx-7 my-4 w-10/12 max-h-[90vh] bg-mauve-500 overflow-y-auto"
+            dialogClassName={SHEET_DIALOG}
+            boxClassName={`${SHEET_BOX} sm:max-w-lg`}
         >
-            <h3 className="text-lg text-center font-bold">
-                {mode === "edit" ? "Editar reseña" : "Escribir reseña"}
-            </h3>
+            <header className="shrink-0 border-b border-white/15 px-5 pb-3 pt-3">
+                <div className={`${SHEET_GRABBER} mb-3`} />
 
-            <p className="py-2 px-2 text-xs text-justify opacity-80">
-                Completa cómo te sentiste y cómo calificarías este momento.
-            </p>
+                <div className="flex items-center gap-3">
+                    <div className="min-w-0 flex-1 text-left">
+                        <h3 className="text-base font-bold leading-tight text-white">
+                            {mode === "edit" ? "Editar reseña" : "Escribir reseña"}
+                        </h3>
+                        <p className="text-[11px] text-white/50">
+                            Cómo te sentiste y cómo lo calificarías
+                        </p>
+                    </div>
 
-            <div className="flex flex-col gap-4 mt-4">
+                    <button
+                        type="button"
+                        aria-label="Cerrar"
+                        onClick={onClose}
+                        className="btn btn-circle btn-ghost btn-sm shrink-0 text-white/70 hover:text-white"
+                    >
+                        ✕
+                    </button>
+                </div>
+            </header>
+
+            <div className={SHEET_BODY}>
                 <AudioRecorder
                     names={names}
                     existingAudioUrl={existing?.audioUrl}
@@ -86,63 +115,63 @@ export default function ReviewFormModal({
                     onAudioChange={setAudio}
                 />
 
-                <div className="form-control">
-                    <label className="label" htmlFor="reviewText">
-                        <span className="label-text font-semibold">Descripción</span>
+                <div>
+                    <label className={SHEET_LABEL} htmlFor="reviewText">
+                        Descripción
                     </label>
                     <textarea
                         id="reviewText"
-                        className="textarea textarea-bordered w-full my-1 min-h-56 text-sm bg-base-100 text-base-content"
+                        className={`${SHEET_FIELD} min-h-44 leading-relaxed`}
                         placeholder="Escribe aquí tu comentario sobre este momento..."
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                     />
                 </div>
 
-                <div className="form-control">
-                    <label className="label" htmlFor="reviewFeeling">
-                        <span className="label-text font-semibold">¿Cómo te sentiste?</span>
+                <div>
+                    <label className={SHEET_LABEL} htmlFor="reviewFeeling">
+                        ¿Cómo te sentiste?
                     </label>
                     <select
                         id="reviewFeeling"
-                        className="select select-bordered w-full bg-base-100 text-base-content"
+                        className={SHEET_FIELD}
                         value={feeling}
                         onChange={(e) => setFeeling(e.target.value)}
                     >
-                        <option disabled value="">
+                        <option disabled value="" className={SHEET_OPTION}>
                             Selecciona un feeling
                         </option>
                         {feelingsFor(genre).map((option) => (
-                            <option key={option} value={option}>
+                            <option key={option} value={option} className={SHEET_OPTION}>
                                 {option}
                             </option>
                         ))}
                     </select>
                 </div>
 
-                <div className="form-control">
-                    <label className="label justify-center">
-                        <span className="label-text font-semibold">Calificación del momento</span>
-                    </label>
+                <div>
+                    <span className={`${SHEET_LABEL} text-center`}>Calificación del momento</span>
                     <div className="flex justify-center">
                         <RatingInput name="rating-registermodal" value={rating} onChange={setRating} />
                     </div>
                 </div>
+            </div>
 
-                <div className="flex justify-end gap-2 mt-4">
-                    <button type="button" className="btn btn-ghost" onClick={onClose}>
+            <footer className={SHEET_FOOTER}>
+                <div className="flex items-center justify-end gap-2">
+                    <button type="button" className={SHEET_BUTTON_GHOST} onClick={onClose}>
                         Cancelar
                     </button>
                     <button
                         type="button"
-                        className="btn btn-primary"
+                        className={SHEET_BUTTON_PRIMARY}
                         onClick={handleSave}
                         disabled={saving}
                     >
                         Guardar
                     </button>
                 </div>
-            </div>
+            </footer>
         </Modal>
     );
 }

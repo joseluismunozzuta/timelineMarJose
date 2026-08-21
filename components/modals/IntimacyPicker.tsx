@@ -12,12 +12,12 @@ export default function IntimacyPicker({ value, onChange }: Props) {
 
     return (
         <div className="form-control">
-            <span className="label-text font-medium mb-2">Intimidad</span>
+            <span className="mb-1.5 block text-[11px] uppercase tracking-widest text-white/55">Intimidad</span>
 
             <div className="flex justify-center items-center gap-4">
                 <button
                     type="button"
-                    className="btn btn-circle btn-outline"
+                    className="grid h-9 w-9 place-items-center rounded-full border border-white/25 text-white transition-colors hover:bg-white/10"
                     onClick={() => onChange(Math.max(0, value - 1))}
                 >
                     -
@@ -38,14 +38,14 @@ export default function IntimacyPicker({ value, onChange }: Props) {
                                   </span>
                               ))}
                     </div>
-                    <div className="text-sm opacity-70">
+                    <div className="text-sm text-white/60">
                         {value === 0 ? "Sin intimidad" : `x${value}`}
                     </div>
                 </div>
 
                 <button
                     type="button"
-                    className="btn btn-circle btn-primary"
+                    className="grid h-9 w-9 place-items-center rounded-full bg-pink-600 text-white transition-colors hover:bg-pink-500"
                     onClick={() => onChange(value + 1)}
                 >
                     +

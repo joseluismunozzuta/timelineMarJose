@@ -62,11 +62,27 @@ export default function TimelineView() {
         swiper.on("destroy", () => swipersRef.current.delete(blockId));
     }, []);
 
-    /** "Donde empezó todo": baja al bloque 1 y lo deja en su primer slide. */
+    /** "Donde todo empezó": baja al bloque 1 y lo deja en su primer slide. */
     const goToStart = useCallback(() => {
         document.getElementById("container1")?.scrollIntoView({ behavior: "smooth" });
         swipersRef.current.get(1)?.slideTo(0, SLIDE_SPEED);
     }, []);
+
+    /**
+     * "Lo más reciente": último slide del último bloque.
+     *
+     * En el DOM los bloques van del más nuevo al más antiguo, así que el bloque
+     * de mayor número es el primero de la página, justo debajo del hero.
+     */
+    const goToLatest = useCallback(() => {
+        const lastBlock = blocks.length;
+        if (lastBlock === 0) return;
+
+        document.getElementById(`container${lastBlock}`)?.scrollIntoView({ behavior: "smooth" });
+
+        const lastSlide = blocks[lastBlock - 1].length - 1;
+        swipersRef.current.get(lastBlock)?.slideTo(lastSlide, SLIDE_SPEED);
+    }, [blocks]);
 
     const findMoment = (momentId: number | undefined) =>
         moments.find((m) => m.momentId === momentId) ?? null;
@@ -240,6 +256,8 @@ export default function TimelineView() {
                 onNewMoment={handleNewMoment}
                 onLogout={logout}
                 onGoToStart={goToStart}
+                onGoToLatest={goToLatest}
+                momentCount={moments.length}
             />
 
             <Timeline

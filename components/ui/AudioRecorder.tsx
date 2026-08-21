@@ -166,17 +166,17 @@ export default function AudioRecorder({
     }
 
     return (
-        <div className="rounded-2xl border border-base-300 bg-base-200/50 p-3">
+        <div className="rounded-2xl border border-white/15 bg-white/5 p-3">
             {status === "idle" && (
                 <div className="flex items-center gap-3">
                     <button
                         type="button"
-                        className="btn btn-sm gap-2"
+                        className="rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-sm text-white transition-colors hover:bg-white/20"
                         onClick={startRecording}
                     >
                         🎙️ Grabar descripción
                     </button>
-                    <span className="text-xs opacity-60">
+                    <span className="text-xs text-white/55">
                         Cuéntalo en voz alta y lo escribo por ti
                     </span>
                 </div>
@@ -189,15 +189,15 @@ export default function AudioRecorder({
                         <span className="relative inline-flex h-3 w-3 rounded-full bg-red-600" />
                     </span>
 
-                    <span className="font-mono text-sm tabular-nums">
+                    <span className="font-mono text-sm tabular-nums text-white">
                         {formatDuration(seconds)}
                     </span>
 
-                    <button type="button" className="btn btn-sm btn-error" onClick={stopRecording}>
+                    <button type="button" className="rounded-full bg-red-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-red-500" onClick={stopRecording}>
                         Detener
                     </button>
 
-                    <span className="text-xs opacity-50">
+                    <span className="text-xs text-white/45">
                         máx. {formatDuration(MAX_RECORDING_SECONDS)}
                     </span>
                 </div>
@@ -214,7 +214,7 @@ export default function AudioRecorder({
                     <div className="flex flex-wrap gap-2">
                         <button
                             type="button"
-                            className="btn btn-sm btn-primary gap-2"
+                            className="flex items-center gap-2 rounded-full bg-pink-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-pink-500 disabled:opacity-50"
                             onClick={process}
                             disabled={status === "processing"}
                         >
@@ -230,7 +230,7 @@ export default function AudioRecorder({
 
                         <button
                             type="button"
-                            className="btn btn-sm btn-ghost"
+                            className="rounded-full px-4 py-1.5 text-sm text-white/70 transition-colors hover:text-white"
                             onClick={discard}
                             disabled={status === "processing"}
                         >
@@ -242,12 +242,12 @@ export default function AudioRecorder({
 
             {status === "idle" && existingAudioUrl && (
                 <div className="mt-3 space-y-1">
-                    <p className="text-xs opacity-60">Nota de voz guardada</p>
+                    <p className="text-[11px] uppercase tracking-widest text-white/50">Nota de voz guardada</p>
                     <audio controls src={existingAudioUrl} className="w-full" />
                 </div>
             )}
 
-            {error && <p className="mt-2 text-xs text-error">{error}</p>}
+            {error && <p className="mt-2 text-xs text-red-300">{error}</p>}
         </div>
     );
 }

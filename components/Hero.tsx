@@ -19,10 +19,23 @@ type Props = {
     names?: string[];
     onNewMoment: () => void;
     onLogout: () => void;
+    /** Lleva al primer momento de la timeline. */
     onGoToStart: () => void;
+    /** Lleva al momento más reciente. */
+    onGoToLatest: () => void;
+    /** Cuántos momentos hay; solo para no ofrecer el atajo si no hay ninguno. */
+    momentCount?: number;
 };
 
-export default function Hero({ title, names = [], onNewMoment, onLogout, onGoToStart }: Props) {
+export default function Hero({
+    title,
+    names = [],
+    onNewMoment,
+    onLogout,
+    onGoToStart,
+    onGoToLatest,
+    momentCount = 0
+}: Props) {
     const backgroundLayers = useHeroBackground(HERO_IMAGES, BACKGROUND_INTERVAL_MS);
 
     const byline = names.length ? names.join(" & ") : null;
@@ -118,13 +131,45 @@ export default function Hero({ title, names = [], onNewMoment, onLogout, onGoToS
                             desde el primer día que nos vimos ❤️
                         </p>
 
-                        <button
-                            type="button"
-                            onClick={onGoToStart}
-                            className="w-full rounded-full bg-pink-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-pink-900/40 transition-colors hover:bg-pink-500"
-                        >
-                            Donde todo empezó ❤️
-                        </button>
+                        {/*
+                          Los dos extremos de la historia, desde un mismo sitio.
+                          El principio es el gesto con carga emocional y se queda
+                          como acción principal; lo más reciente es el atajo del
+                          día a día y va en tono secundario, sin competir.
+                        */}
+                        <div className="space-y-2">
+                            <button
+                                type="button"
+                                onClick={onGoToStart}
+                                className="w-full rounded-full bg-pink-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-pink-900/40 transition-colors hover:bg-pink-500"
+                            >
+                                Donde todo empezó ❤️
+                            </button>
+
+                            {momentCount > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={onGoToLatest}
+                                    className="mx-auto flex items-center gap-1.5 rounded-full px-4 py-2 text-sm text-white/70 transition-colors hover:text-white"
+                                >
+                                    <span>Ir a lo más reciente</span>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth={2}
+                                        className="h-4 w-4"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                                        />
+                                    </svg>
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

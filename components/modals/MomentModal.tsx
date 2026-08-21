@@ -5,6 +5,19 @@ import { useEffect, useState } from "react";
 import AudioRecorder, { type RecordedAudio } from "@/components/ui/AudioRecorder";
 import Modal from "@/components/ui/Modal";
 import RatingInput from "@/components/ui/RatingInput";
+import {
+    SHEET_BODY,
+    SHEET_BOX,
+    SHEET_BUTTON_GHOST,
+    SHEET_BUTTON_PRIMARY,
+    SHEET_BUTTON_SOFT,
+    SHEET_DIALOG,
+    SHEET_FIELD,
+    SHEET_FOOTER,
+    SHEET_GRABBER,
+    SHEET_LABEL,
+    SHEET_OPTION
+} from "@/components/ui/sheetStyles";
 import { feelingsFor } from "@/lib/constants";
 import { toDatetimeLocal } from "@/lib/format";
 import type { IndexedMoment, Song } from "@/types";
@@ -139,56 +152,75 @@ export default function MomentModal({
         <Modal
             open={open}
             onClose={onClose}
-            boxClassName="mx-3 w-11/12 my-4 max-w-4xl p-0 overflow-y-scroll max-h-[90vh]"
+            dialogClassName={SHEET_DIALOG}
+            boxClassName={`${SHEET_BOX} sm:max-w-3xl`}
         >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-base-300 bg-base-200">
-                <h3 className="text-xl text-center font-bold">
-                    {isCreate ? "Registrar momento" : "Editar momento"}
-                </h3>
-                <button type="button" className="btn btn-sm btn-circle btn-ghost" onClick={onClose}>
-                    ✕
-                </button>
-            </div>
+            <header className="shrink-0 border-b border-white/15 px-5 pb-3 pt-3">
+                <div className={`${SHEET_GRABBER} mb-3`} />
 
-            <div className="p-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="flex items-center gap-3">
+                    <h3 className="min-w-0 flex-1 text-base font-bold leading-tight text-white">
+                        {isCreate ? "Registrar momento" : "Editar momento"}
+                    </h3>
+
+                    <button
+                        type="button"
+                        aria-label="Cerrar"
+                        onClick={onClose}
+                        className="btn btn-circle btn-ghost btn-sm shrink-0 text-white/70 hover:text-white"
+                    >
+                        ✕
+                    </button>
+                </div>
+            </header>
+
+            <div className={SHEET_BODY}>
+                <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                     {isCreate && (
-                        <div className="space-y-4">
-                            <div className="rounded-3xl overflow-hidden border border-base-300 bg-base-200">
+                        <div className="space-y-3">
+                            {/*
+                              object-contain y no cover: la vista previa debe
+                              enseñar la foto entera tal y como se va a subir.
+                              Con object-cover y altura fija, las fotos verticales
+                              salían recortadas por arriba y por abajo.
+                            */}
+                            <div className="flex items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-black/25">
                                 {imagePreview && (
                                     <img
                                         src={imagePreview}
                                         alt="Vista previa del momento"
-                                        className="w-full h-95 object-cover"
+                                        className="max-h-[45vh] w-auto max-w-full object-contain"
                                     />
                                 )}
                             </div>
-                            <button
-                                type="button"
-                                className="btn btn-outline btn-sm"
-                                onClick={onChangeImage}
-                            >
+                            <button type="button" className={SHEET_BUTTON_SOFT} onClick={onChangeImage}>
                                 Cambiar imagen
                             </button>
                         </div>
                     )}
 
-                    <div className="space-y-4">
-                        <div className="form-control">
-                            <span className="label-text font-medium mb-2">Título</span>
+                    <div className="space-y-5">
+                        <div>
+                            <label className={SHEET_LABEL} htmlFor="momentTitle">
+                                Título
+                            </label>
                             <input
+                                id="momentTitle"
                                 type="text"
-                                className="input input-bordered w-full"
+                                className={SHEET_FIELD}
                                 value={draft.title}
                                 onChange={(e) => update("title", e.target.value)}
                             />
                         </div>
 
-                        <div className="form-control">
-                            <span className="label-text font-medium mb-2">Lugar</span>
+                        <div>
+                            <label className={SHEET_LABEL} htmlFor="momentPlace">
+                                Lugar
+                            </label>
                             <input
+                                id="momentPlace"
                                 type="text"
-                                className="input input-bordered w-full"
+                                className={SHEET_FIELD}
                                 value={draft.place}
                                 onChange={(e) => update("place", e.target.value)}
                             />
@@ -207,75 +239,27 @@ export default function MomentModal({
                             />
                         )}
 
-                        <label className="flex items-center gap-2 cursor-pointer">
+                        <label className="flex cursor-pointer items-center gap-2 text-sm text-white/80">
                             <input
                                 type="checkbox"
-                                className="checkbox checkbox-sm"
+                                className="checkbox checkbox-sm border-white/30 bg-white/10"
                                 checked={noSong}
                                 onChange={(e) => {
                                     setNoSong(e.target.checked);
                                     if (e.target.checked) update("song", null);
                                 }}
                             />
-                            <span className="label-text">Este momento no tiene canción</span>
+                            Este momento no tiene canción
                         </label>
 
-                        {isCreate && (
-                            <>
-                                <AudioRecorder
-                                    names={names}
-                                    onTranscribed={(text) => update("description", text)}
-                                    onAudioChange={(audio) => update("audio", audio)}
-                                />
-
-                                <div className="form-control">
-                                    <span className="label-text font-medium mb-2">Descripción</span>
-                                    <textarea
-                                        rows={4}
-                                        className="textarea textarea-bordered w-full"
-                                        value={draft.description}
-                                        onChange={(e) => update("description", e.target.value)}
-                                    />
-                                </div>
-
-                                <div className="form-control">
-                                    <span className="label-text font-medium mb-2">Calificación</span>
-                                    <div className="flex justify-center">
-                                        <RatingInput
-                                            name="rating-newmoment"
-                                            value={draft.rating}
-                                            onChange={(value) => update("rating", value)}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="form-control">
-                                    <span className="label-text font-medium mb-2">
-                                        ¿Cómo te sentiste?
-                                    </span>
-                                    <select
-                                        className="select select-bordered w-full"
-                                        value={draft.feeling}
-                                        onChange={(e) => update("feeling", e.target.value)}
-                                    >
-                                        <option disabled value="">
-                                            Selecciona un feeling
-                                        </option>
-                                        {feelingsFor(genre).map((option) => (
-                                            <option key={option} value={option}>
-                                                {option}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </>
-                        )}
-
-                        <div className="form-control">
-                            <span className="label-text font-medium mb-2">Fecha y hora</span>
+                        <div>
+                            <label className={SHEET_LABEL} htmlFor="momentTimestamp">
+                                Fecha y hora
+                            </label>
                             <input
+                                id="momentTimestamp"
                                 type="datetime-local"
-                                className="input input-bordered w-full"
+                                className={`${SHEET_FIELD} [color-scheme:dark]`}
                                 value={draft.timestamp}
                                 onChange={(e) => update("timestamp", e.target.value)}
                             />
@@ -283,20 +267,79 @@ export default function MomentModal({
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-base-300">
-                    <button type="button" className="btn btn-ghost" onClick={onClose}>
+                {isCreate && (
+                    <div className="space-y-5 border-t border-white/10 pt-5">
+                        <AudioRecorder
+                            names={names}
+                            onTranscribed={(text) => update("description", text)}
+                            onAudioChange={(audio) => update("audio", audio)}
+                        />
+
+                        <div>
+                            <label className={SHEET_LABEL} htmlFor="momentDescription">
+                                Descripción
+                            </label>
+                            <textarea
+                                id="momentDescription"
+                                rows={4}
+                                className={`${SHEET_FIELD} leading-relaxed`}
+                                value={draft.description}
+                                onChange={(e) => update("description", e.target.value)}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                            <div>
+                                <span className={SHEET_LABEL}>Calificación</span>
+                                <div className="flex">
+                                    <RatingInput
+                                        name="rating-newmoment"
+                                        value={draft.rating}
+                                        onChange={(value) => update("rating", value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className={SHEET_LABEL} htmlFor="momentFeeling">
+                                    ¿Cómo te sentiste?
+                                </label>
+                                <select
+                                    id="momentFeeling"
+                                    className={SHEET_FIELD}
+                                    value={draft.feeling}
+                                    onChange={(e) => update("feeling", e.target.value)}
+                                >
+                                    <option disabled value="" className={SHEET_OPTION}>
+                                        Selecciona un feeling
+                                    </option>
+                                    {feelingsFor(genre).map((option) => (
+                                        <option key={option} value={option} className={SHEET_OPTION}>
+                                            {option}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <footer className={SHEET_FOOTER}>
+                <div className="flex items-center justify-end gap-2">
+                    <button type="button" className={SHEET_BUTTON_GHOST} onClick={onClose}>
                         Cancelar
                     </button>
                     <button
                         type="button"
-                        className={`btn btn-primary ${isValid ? "" : "btn-disabled"}`}
+                        className={SHEET_BUTTON_PRIMARY}
                         disabled={!isValid || saving}
                         onClick={handleSave}
                     >
                         {isCreate ? "Guardar momento" : "Guardar cambios"}
                     </button>
                 </div>
-            </div>
+            </footer>
         </Modal>
     );
 }

@@ -117,11 +117,11 @@ export default function SpotifySearch({ selected, onSelect }: Props) {
 
     return (
         <div className="form-control relative" ref={containerRef}>
-            <span className="label-text font-medium mb-2">Canción del momento</span>
+            <span className="mb-1.5 block text-[11px] uppercase tracking-widest text-white/55">Canción del momento</span>
 
             <input
                 type="text"
-                className="input input-bordered w-full"
+                className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:border-white/45 focus:outline-none"
                 placeholder="Busca una canción..."
                 value={queryText}
                 onChange={(e) => {
@@ -136,23 +136,23 @@ export default function SpotifySearch({ selected, onSelect }: Props) {
             />
 
             {showResults && (
-                <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-72 overflow-y-auto rounded-2xl border border-base-200 bg-base-100 shadow-xl">
+                <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-72 overflow-y-auto rounded-2xl border border-white/15 bg-[#2b2233] shadow-xl">
                     {status === "searching" && (
-                        <div className="px-4 py-3 text-sm opacity-70">Buscando...</div>
+                        <div className="px-4 py-3 text-sm text-white/60">Buscando...</div>
                     )}
                     {status === "error" && (
-                        <div className="px-4 py-3 text-sm text-error">Error buscando canciones</div>
+                        <div className="px-4 py-3 text-sm text-red-300">Error buscando canciones</div>
                     )}
                     {status === "idle" && results?.length === 0 && (
-                        <div className="px-4 py-3 text-sm opacity-70">No se encontraron resultados</div>
+                        <div className="px-4 py-3 text-sm text-white/60">No se encontraron resultados</div>
                     )}
                     {status === "idle" &&
                         results?.map((track, index) => (
                             <button
                                 key={track.id}
                                 type="button"
-                                className={`flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-base-200 ${
-                                    index !== results.length - 1 ? "border-b border-base-200" : ""
+                                className={`flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-white/10 ${
+                                    index !== results.length - 1 ? "border-b border-white/10" : ""
                                 }`}
                                 onClick={() => handleSelect(track)}
                             >
@@ -162,8 +162,8 @@ export default function SpotifySearch({ selected, onSelect }: Props) {
                                     className="h-12 w-12 rounded-xl object-cover shrink-0"
                                 />
                                 <div className="min-w-0">
-                                    <p className="truncate font-medium">{track.name}</p>
-                                    <p className="truncate text-sm opacity-70">{track.artist}</p>
+                                    <p className="truncate font-medium text-white">{track.name}</p>
+                                    <p className="truncate text-sm text-white/60">{track.artist}</p>
                                 </div>
                             </button>
                         ))}
@@ -171,7 +171,7 @@ export default function SpotifySearch({ selected, onSelect }: Props) {
             )}
 
             {selected && (
-                <div className="mt-3 rounded-2xl border border-base-200 p-3">
+                <div className="mt-3 rounded-2xl border border-white/15 bg-white/5 p-3">
                     <div className="flex items-center gap-3">
                         {selected.image && (
                             <img
@@ -181,18 +181,18 @@ export default function SpotifySearch({ selected, onSelect }: Props) {
                             />
                         )}
                         <div className="min-w-0 flex-1">
-                            <p className="truncate font-semibold">{selected.name}</p>
-                            <p className="truncate text-sm opacity-70">{selected.artist}</p>
+                            <p className="truncate font-semibold text-white">{selected.name}</p>
+                            <p className="truncate text-sm text-white/60">{selected.artist}</p>
                         </div>
                         <a
                             href={selected.url || "#"}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="btn btn-ghost btn-sm"
+                            className="rounded-full px-3 py-1 text-sm text-white/70 hover:text-white"
                         >
                             Abrir
                         </a>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={handleClear}>
+                        <button type="button" className="rounded-full px-3 py-1 text-sm text-white/70 hover:text-white" onClick={handleClear}>
                             Quitar
                         </button>
                     </div>

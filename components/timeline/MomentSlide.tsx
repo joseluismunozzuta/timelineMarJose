@@ -4,8 +4,6 @@ import { formatDate, formatSecondaryDate, averageRating } from "@/lib/format";
 import type { IndexedMoment, Participant } from "@/types";
 
 import MomentImage from "./MomentImage";
-
-const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 import MomentSide from "./MomentSide";
 import Rating from "./Rating";
 
@@ -41,22 +39,6 @@ export default function MomentSlide({
     const average = averageRating(owner?.rating ?? null, other?.rating ?? null);
     const isMyMoment = ownerUid === myUid;
 
-    // Con una sola reseña, las estrellas parecen la nota de la pareja cuando en
-    // realidad son las de una persona. Lo decimos.
-    const raters = [
-        { rating: owner?.rating, uid: ownerUid, name: ownerName },
-        { rating: other?.rating, uid: otherUid, name: otherName }
-    ].filter((r) => typeof r.rating === "number");
-
-    const ratingCaption =
-        raters.length === 2
-            ? "Promedio de las dos reseñas"
-            : raters.length === 1
-              ? raters[0].uid === myUid
-                  ? "Solo tu reseña"
-                  : `Solo la reseña de ${capitalize(raters[0].name)}`
-              : null;
-
     // Ojo: esto es el CONTENIDO del slide. El <SwiperSlide> lo pone TimelineBlock,
     // porque swiper/react exige que sean hijos directos de <Swiper>.
     return (
@@ -91,11 +73,12 @@ export default function MomentSlide({
 
                 <MomentImage moment={moment} />
 
-                <div className="flex flex-col my-1 items-center justify-center mx-auto">
+                {/*
+                  Sin leyenda de cuántas reseñas componen la nota: cuando falta
+                  una, el avatar en gris de más abajo ya lo dice.
+                */}
+                <div className="flex my-1 items-center justify-center mx-auto">
                     <Rating name={`rating-${moment.momentId}`} value={average} />
-                    {ratingCaption && (
-                        <span className="text-[9px] italic text-white/60">{ratingCaption}</span>
-                    )}
                 </div>
 
                 <div className="my-1 flex flex-wrap flex-col items-center justify-center gap-1">
